@@ -11,12 +11,7 @@ import (
 )
 
 func main() {
-	var parameters Parameters
-
-	flag.IntVar(&parameters.port, "port", 443, "Webhook server port.")
-	flag.StringVar(&parameters.certFile, "certFile", "/etc/mutator/certs/cert.pem", "File containing tls certificate")
-	flag.StringVar(&parameters.keyFile, "keyFile", "/etc/mutator/certs/key.pem", "File containing tls private key")
-	flag.Parse()
+	parameters := parse()
 
 	mutator := &Mutator{
 		props: parameters,
@@ -40,4 +35,15 @@ func main() {
 
 	glog.Infof("Shutting down initiated")
 	mutator.shutdown(context.Background())
+}
+
+func parse() Parameters {
+	var parameters Parameters
+
+	flag.IntVar(&parameters.port, "port", 443, "Webhook server port.")
+	flag.StringVar(&parameters.certFile, "certFile", "/etc/mutator/certs/cert.pem", "File containing tls certificate")
+	flag.StringVar(&parameters.keyFile, "keyFile", "/etc/mutator/certs/key.pem", "File containing tls private key")
+	flag.Parse()
+
+	return parameters
 }
