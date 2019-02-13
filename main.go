@@ -1,9 +1,11 @@
 package main
 
 import (
-	"context"
 	"flag"
+	"fmt"
 	"github.com/golang/glog"
+	"github.com/mchandramouli/haystack-kube-sidecar-injector/httpd"
+	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
@@ -11,51 +13,60 @@ import (
 )
 
 func main() {
-	parameters := parseArguments()
+	httpdConf := readHttpdConf()
 
-	if mutator, ok := startHttpsServer(parameters); ok {
-		wait()
-		mutator.shutdown(context.Background())
+	simpleServer := httpd.NewServer(httpdConf)
+
+	simpleServer.AddRoute("/mutate", serve)
+
+	if startHttpsServer(simpleServer) {
+		wait(func() {
+			glog.Infof("Shutting down initiated")
+			simpleServer.Shutdown()
+		})
 	} else {
 		os.Exit(1)
 	}
 }
 
-func parseArguments() Parameters {
-	var parameters Parameters
+func readHttpdConf() httpd.Conf {
+	var httpdConf httpd.Conf
 
-	flag.IntVar(&parameters.port, "port", 443, "server port.")
-	flag.StringVar(&parameters.certFile, "certFile", "/etc/mutator/certs/cert.pem", "File containing tls certificate")
-	flag.StringVar(&parameters.keyFile, "keyFile", "/etc/mutator/certs/key.pem", "File containing tls private key")
+	flag.IntVar(&httpdConf.Port, "port", 443, "server port.")
+	flag.StringVar(&httpdConf.CertFile, "certFile", "/etc/mutator/certs/cert.pem", "File containing tls certificate")
+	flag.StringVar(&httpdConf.KeyFile, "keyFile", "/etc/mutator/certs/key.pem", "File containing tls private key")
 	flag.Parse()
 
-	return parameters
+	return httpdConf
 }
 
-func startHttpsServer(parameters Parameters) (*Mutator, bool) {
-	mutator := &Mutator{
-		props: parameters,
-	}
-
+func startHttpsServer(simpleServer httpd.SimpleServer) bool {
 	errs := make(chan error, 1)
-	mutator.listen(errs)
+	simpleServer.Start(errs)
 
 	select {
 	case err := <-errs:
-		glog.Errorf("Filed to listen and serve mutator server: %v", err)
-		return nil, false
+		glog.Errorf("Filed to listen and serve : %v", err)
+		return false
 	case <-time.After(5 * time.Second):
-		glog.Infof("Server listening in port %v", mutator.props.port)
+		glog.Infof("SimpleServer listening in port %v", simpleServer.Port())
 	}
 
-	return mutator, true
+	return true
 }
 
-func wait() {
+func wait(callback func()) {
 	// subscribe to process shutdown signal
 	signalChan := make(chan os.Signal, 1)
 	signal.Notify(signalChan, syscall.SIGINT, syscall.SIGTERM)
 	<-signalChan
+	callback()
+}
 
-	glog.Infof("Shutting down initiated")
+func serve(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusOK)
+	if _, err := w.Write([]byte("Hello World!")); err != nil {
+		glog.Errorf("Failed writing response: %v", err)
+		http.Error(w, fmt.Sprintf("Failed writing response: %v", err), http.StatusInternalServerError)
+	}
 }
