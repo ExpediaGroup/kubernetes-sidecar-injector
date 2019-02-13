@@ -2,10 +2,9 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"github.com/golang/glog"
 	"github.com/mchandramouli/haystack-kube-sidecar-injector/httpd"
-	"net/http"
+	"github.com/mchandramouli/haystack-kube-sidecar-injector/webhook"
 	"os"
 	"os/signal"
 	"syscall"
@@ -17,7 +16,9 @@ func main() {
 
 	simpleServer := httpd.NewServer(httpdConf)
 
-	simpleServer.AddRoute("/mutate", serve)
+	mutator := webhook.Mutator{}
+
+	simpleServer.AddRoute("/mutate", mutator.Mutate)
 
 	if startHttpsServer(simpleServer) {
 		wait(func() {
@@ -61,12 +62,4 @@ func wait(callback func()) {
 	signal.Notify(signalChan, syscall.SIGINT, syscall.SIGTERM)
 	<-signalChan
 	callback()
-}
-
-func serve(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(http.StatusOK)
-	if _, err := w.Write([]byte("Hello World!")); err != nil {
-		glog.Errorf("Failed writing response: %v", err)
-		http.Error(w, fmt.Sprintf("Failed writing response: %v", err), http.StatusInternalServerError)
-	}
 }
