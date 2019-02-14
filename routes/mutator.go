@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"errors"
 	"fmt"
 	"github.com/ghodss/yaml"
 	"github.com/golang/glog"
@@ -40,11 +41,48 @@ type mutatorController struct {
 	mutator webhook.Mutator
 }
 
-func (m mutatorController) Mutate(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(http.StatusOK)
-	if _, err := w.Write([]byte(m.mutator.Mutate())); err != nil {
-		glog.Errorf("Failed writing response: %v", err)
-		http.Error(w, fmt.Sprintf("Failed writing response: %v", err), http.StatusInternalServerError)
+func (controller mutatorController) Mutate(writer http.ResponseWriter, request *http.Request) {
+	body, err := readRequestBody(request)
+	if err != nil {
+		writeError(writer, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	resp, err := controller.mutator.Mutate(body)
+	if err != nil {
+		writeError(writer, fmt.Sprintf("Failed to process request: %v", err), http.StatusInternalServerError)
+		return
+	}
+
+	if _, err := writer.Write(resp); err != nil {
+		writeError(writer, fmt.Sprintf("Failed to write response: %v", err), http.StatusInternalServerError)
 	}
 }
 
+func readRequestBody(r *http.Request) ([]byte, error) {
+	var body []byte
+
+	if r.Body != nil {
+		if data, err := ioutil.ReadAll(r.Body); err == nil {
+			body = data
+		}
+	}
+
+	if len(body) == 0 {
+		return nil, errors.New("body of the request is empty")
+	}
+
+	// verify the content type is accurate
+	contentType := r.Header.Get("Content-Type")
+	if contentType != "application/json" {
+		message := fmt.Sprintf("received Content-Type=%s, Expected Content-Type is 'application/json'", contentType)
+		return nil, errors.New(message)
+	}
+
+	return body, nil
+}
+
+func writeError(writer http.ResponseWriter, message string, status int) {
+	glog.Errorf(message)
+	http.Error(writer, message, status)
+}
