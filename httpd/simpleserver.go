@@ -21,8 +21,8 @@ type SimpleServer interface {
 	Shutdown()
 }
 
-func NewServer(conf Conf) SimpleServer {
-	simpleServer := lightServer{
+func NewSimpleServer(conf Conf) SimpleServer {
+	simpleServer := simpleServerImpl{
 		conf: conf,
 	}
 	simpleServer.server = &http.Server{
@@ -32,21 +32,21 @@ func NewServer(conf Conf) SimpleServer {
 	return simpleServer
 }
 
-type lightServer struct {
+type simpleServerImpl struct {
 	conf Conf
 	server *http.Server
 	mux *http.ServeMux
 }
 
-func (simpleServer lightServer) Port() int {
+func (simpleServer simpleServerImpl) Port() int {
 	return simpleServer.conf.Port
 }
 
-func (simpleServer lightServer) AddRoute(pattern string, route Route) {
+func (simpleServer simpleServerImpl) AddRoute(pattern string, route Route) {
 	simpleServer.mux.HandleFunc(pattern, route)
 }
 
-func (simpleServer lightServer) Start(errs chan error) {
+func (simpleServer simpleServerImpl) Start(errs chan error) {
 	simpleServer.server.Handler = simpleServer.mux
 	go func() {
 		if err := simpleServer.server.ListenAndServeTLS(
@@ -58,6 +58,6 @@ func (simpleServer lightServer) Start(errs chan error) {
 	}()
 }
 
-func (simpleServer lightServer) Shutdown() {
+func (simpleServer simpleServerImpl) Shutdown() {
 	_ = simpleServer.server.Shutdown(context.Background())
 }

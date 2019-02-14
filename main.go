@@ -4,41 +4,55 @@ import (
 	"flag"
 	"github.com/golang/glog"
 	"github.com/mchandramouli/haystack-kube-sidecar-injector/httpd"
-	"github.com/mchandramouli/haystack-kube-sidecar-injector/webhook"
+	"github.com/mchandramouli/haystack-kube-sidecar-injector/routes"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
 )
 
-func main() {
-	httpdConf := readHttpdConf()
-
-	simpleServer := httpd.NewServer(httpdConf)
-
-	mutator := webhook.Mutator{}
-
-	simpleServer.AddRoute("/mutate", mutator.Mutate)
-
-	if startHttpsServer(simpleServer) {
-		wait(func() {
-			glog.Infof("Shutting down initiated")
-			simpleServer.Shutdown()
-		})
-	} else {
-		os.Exit(1)
-	}
+type config struct {
+	httpdConf httpd.Conf
+	sideCarConfigFile string
 }
 
-func readHttpdConf() httpd.Conf {
-	var httpdConf httpd.Conf
+func main() {
+	conf := readConfig()
 
-	flag.IntVar(&httpdConf.Port, "port", 443, "server port.")
-	flag.StringVar(&httpdConf.CertFile, "certFile", "/etc/mutator/certs/cert.pem", "File containing tls certificate")
-	flag.StringVar(&httpdConf.KeyFile, "keyFile", "/etc/mutator/certs/key.pem", "File containing tls private key")
+	simpleServer := httpd.NewSimpleServer(conf.httpdConf)
+
+	if addRoutes(simpleServer, conf) {
+		if startHttpsServer(simpleServer) {
+			wait(func() {
+				glog.Infof("Shutting down initiated")
+				simpleServer.Shutdown()
+			})
+		}
+	}
+
+	os.Exit(1)
+}
+
+func addRoutes(simpleServer httpd.SimpleServer, conf config) bool {
+	mutator, err := routes.NewMutatorController(conf.sideCarConfigFile)
+	if err != nil {
+		glog.Errorf("Unable to create mutator : %v", err)
+		return false
+	}
+	simpleServer.AddRoute("/mutate", mutator.Mutate)
+	return true
+}
+
+func readConfig() config {
+	var conf config
+
+	flag.IntVar(&conf.httpdConf.Port, "port", 443, "server port.")
+	flag.StringVar(&conf.httpdConf.CertFile, "certFile", "/etc/mutator/certs/cert.pem", "File containing tls certificate")
+	flag.StringVar(&conf.httpdConf.KeyFile, "keyFile", "/etc/mutator/certs/key.pem", "File containing tls private key")
+	flag.StringVar(&conf.sideCarConfigFile, "sideCar", "/etc/mutator/sidecar.yaml", "File containing sidecar template")
 	flag.Parse()
 
-	return httpdConf
+	return conf
 }
 
 func startHttpsServer(simpleServer httpd.SimpleServer) bool {

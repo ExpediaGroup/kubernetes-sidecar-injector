@@ -1,18 +1,38 @@
 package webhook
 
 import (
-	"fmt"
-	"github.com/golang/glog"
-	"net/http"
+	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/serializer"
 )
 
-type Mutator struct {
+var (
+	runtimeScheme    = runtime.NewScheme()
+	codecs           = serializer.NewCodecFactory(runtimeScheme)
+	deserializer     = codecs.UniversalDeserializer()
+	systemNameSpaces = []string {
+		metav1.NamespaceSystem,
+		metav1.NamespacePublic,
+	}
+)
+
+const (
+	sideCarInjectionKey = "haystack-kube-sidecar-injector.expedia.com/inject"
+	sideCarInjectionStatusKey = "haystack-kube-sidecar-injector.expedia.com/status"
+)
+
+type SideCar struct {
+	Containers  []corev1.Container  `yaml:"containers"`
+	Volumes     []corev1.Volume     `yaml:"volumes"`
 }
 
-func (mutator Mutator) Mutate(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(http.StatusOK)
-	if _, err := w.Write([]byte("Hello World! You are mutated")); err != nil {
-		glog.Errorf("Failed writing response: %v", err)
-		http.Error(w, fmt.Sprintf("Failed writing response: %v", err), http.StatusInternalServerError)
-	}
+type Mutator struct {
+	SideCar *SideCar
 }
+
+func (mutator Mutator) Mutate() string {
+	return "Hello World! You are mutated"
+}
+
+
