@@ -54,7 +54,6 @@ func (simpleServer simpleServerImpl) Start(errs chan error) {
 			simpleServer.conf.KeyFile); err != nil {
 			errs <- err
 		}
-		close(errs)
 	}()
 }
 

@@ -21,26 +21,28 @@ func main() {
 
 	simpleServer := httpd.NewSimpleServer(conf.httpdConf)
 
-	if addRoutes(simpleServer, conf) {
-		if startHttpsServer(simpleServer) {
+	var err error
+	if err = addRoutes(simpleServer, conf); err == nil {
+		if err = startHttpsServer(simpleServer); err == nil {
+			glog.Infof("SimpleServer listening in port %v", simpleServer.Port())
 			wait(func() {
 				glog.Infof("Shutting down initiated")
 				simpleServer.Shutdown()
 			})
+			return
 		}
 	}
-
+	
+	glog.Errorf("Failed to start server: %v", err)
 	os.Exit(1)
 }
 
-func addRoutes(simpleServer httpd.SimpleServer, conf config) bool {
+func addRoutes(simpleServer httpd.SimpleServer, conf config) error {
 	mutator, err := routes.NewMutatorController(conf.sideCarConfigFile)
-	if err != nil {
-		glog.Errorf("Unable to create mutator : %v", err)
-		return false
+	if mutator != nil {
+		simpleServer.AddRoute("/mutate", mutator.Mutate)
 	}
-	simpleServer.AddRoute("/mutate", mutator.Mutate)
-	return true
+	return err
 }
 
 func readConfig() config {
@@ -55,19 +57,19 @@ func readConfig() config {
 	return conf
 }
 
-func startHttpsServer(simpleServer httpd.SimpleServer) bool {
+func startHttpsServer(simpleServer httpd.SimpleServer) error {
 	errs := make(chan error, 1)
 	simpleServer.Start(errs)
 
+	var returnErr error
 	select {
 	case err := <-errs:
-		glog.Errorf("Filed to listen and serve : %v", err)
-		return false
+		returnErr = err
 	case <-time.After(5 * time.Second):
-		glog.Infof("SimpleServer listening in port %v", simpleServer.Port())
 	}
 
-	return true
+	close(errs)
+	return returnErr
 }
 
 func wait(callback func()) {
