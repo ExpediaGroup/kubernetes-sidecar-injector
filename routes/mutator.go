@@ -79,6 +79,7 @@ func readRequestBody(r *http.Request) ([]byte, error) {
 		return nil, errors.New(message)
 	}
 
+	glog.Infof("Request received  : \n %s \n", string(body))
 	return body, nil
 }
 

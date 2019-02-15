@@ -2,17 +2,6 @@
 
 
 [[projects]]
-  digest = "1:4ddc17aeaa82cb18c5f0a25d7c253a10682f518f4b2558a82869506eec223d76"
-  name = "github.com/docker/distribution"
-  packages = [
-    "digestset",
-    "reference",
-  ]
-  pruneopts = "UT"
-  revision = "2461543d988979529609e8cb6fca9ca190dc48da"
-  version = "v2.7.1"
-
-[[projects]]
   digest = "1:2cd7915ab26ede7d95b8749e6b1f933f1c6d5398030684e6505940a10f31cfda"
   name = "github.com/ghodss/yaml"
   packages = ["."]
@@ -72,22 +61,6 @@
   version = "1.0.1"
 
 [[projects]]
-  digest = "1:ee4d4af67d93cc7644157882329023ce9a7bcfce956a079069a9405521c7cc8d"
-  name = "github.com/opencontainers/go-digest"
-  packages = ["."]
-  pruneopts = "UT"
-  revision = "279bed98673dd5bef374d3b6e4b09e2af76183bf"
-  version = "v1.0.0-rc1"
-
-[[projects]]
-  digest = "1:c1b1102241e7f645bc8e0c22ae352e8f0dc6484b6cb4d132fa9f24174e0119e2"
-  name = "github.com/spf13/pflag"
-  packages = ["."]
-  pruneopts = "UT"
-  revision = "298182f68c66c05229eb03ac171abe6e309ee79a"
-  version = "v1.0.3"
-
-[[projects]]
   branch = "master"
   digest = "1:e480830d20470d74d24bc36a52d4152c420c2cab67503e54f8f08e2db52579c5"
   name = "golang.org/x/net"
@@ -141,11 +114,10 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:49536f11bbf6603763ef423dc69f8b7ec8e71a552d770a2898f478c855361979"
+  digest = "1:767b6c0b2c1d9487ee50cb8df1d0fdebf06ac0b19b723f6489d388e7b47c962d"
   name = "k8s.io/api"
   packages = [
     "admission/v1beta1",
-    "admissionregistration/v1beta1",
     "authentication/v1",
     "core/v1",
   ]
@@ -154,22 +126,12 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:23c21b785665e00bbac1232da678cb271967fd614b9019872a2dcc3966c1fc5e"
-  name = "k8s.io/apiextensions-apiserver"
-  packages = ["pkg/features"]
-  pruneopts = "UT"
-  revision = "4143c51bc1440efed73d24c8d441439784c4b754"
-
-[[projects]]
-  branch = "master"
-  digest = "1:7b22ac825ab20a51e155d3c972bece7da92c03176ecdb2c0581da9fab09980ef"
+  digest = "1:d3268c938757c1a9475b284c96c0f1873b9d048a0bb008a0fb5c69981d626ac9"
   name = "k8s.io/apimachinery"
   packages = [
     "pkg/api/resource",
-    "pkg/apis/meta/internalversion",
     "pkg/apis/meta/v1",
     "pkg/apis/meta/v1/unstructured",
-    "pkg/apis/meta/v1beta1",
     "pkg/conversion",
     "pkg/conversion/queryparams",
     "pkg/fields",
@@ -201,46 +163,12 @@
   revision = "f84a4639d8e87482a212fa1cb1fbec7f01bd780f"
 
 [[projects]]
-  branch = "master"
-  digest = "1:8dd754dfeb507aed955045385148d701c2cf5c53077ba0f90a34b0c381e6da00"
-  name = "k8s.io/apiserver"
-  packages = [
-    "pkg/features",
-    "pkg/util/feature",
-  ]
-  pruneopts = "UT"
-  revision = "24ca62cbd38b59291768a122fb74502b7b8c93b8"
-
-[[projects]]
   digest = "1:72fd56341405f53c745377e0ebc4abeff87f1a048e0eea6568a20212650f5a82"
   name = "k8s.io/klog"
   packages = ["."]
   pruneopts = "UT"
   revision = "71442cd4037d612096940ceb0f3fec3f7fff66e0"
   version = "v0.2.0"
-
-[[projects]]
-  digest = "1:7f5845336ded161056ec879ae619e08e989b6be3fe8a2b8b2f07decc5069280c"
-  name = "k8s.io/kubernetes"
-  packages = [
-    "pkg/apis/apps",
-    "pkg/apis/autoscaling",
-    "pkg/apis/core",
-    "pkg/apis/core/v1",
-    "pkg/features",
-    "pkg/util/parsers",
-  ]
-  pruneopts = "UT"
-  revision = "721bfa751924da8d1680787490c54b9179b1fed0"
-  version = "v1.13.3"
-
-[[projects]]
-  branch = "master"
-  digest = "1:f8ae6e0da72b154967c7e6b7566486fc0337ac0d5d0362db67f9c31323a03c28"
-  name = "k8s.io/utils"
-  packages = ["pointer"]
-  pruneopts = "UT"
-  revision = "cdba02414f767c89d729b1b9e61d9891f4e82b35"
 
 [[projects]]
   digest = "1:7719608fe0b52a4ece56c2dde37bedd95b938677d1ab0f84b8a7852e4c59f849"
@@ -257,12 +185,11 @@
     "github.com/ghodss/yaml",
     "github.com/golang/glog",
     "k8s.io/api/admission/v1beta1",
-    "k8s.io/api/admissionregistration/v1beta1",
     "k8s.io/api/core/v1",
     "k8s.io/apimachinery/pkg/apis/meta/v1",
     "k8s.io/apimachinery/pkg/runtime",
     "k8s.io/apimachinery/pkg/runtime/serializer",
-    "k8s.io/kubernetes/pkg/apis/core/v1",
+    "k8s.io/apimachinery/pkg/types",
   ]
   solver-name = "gps-cdcl"
   solver-version = 1

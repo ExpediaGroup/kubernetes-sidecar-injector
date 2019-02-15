@@ -13,5 +13,5 @@ Run
 ```bash
 dep ensure
 go install
-$GOBIN/haystack-kube-sidecar-injector --port 8443 --certFile sample/server-cert.pem --keyFile sample/server-key.pem -logtostderr=true
+$GOBIN/haystack-kube-sidecar-injector --port 8443 --certFile sample/certs/cert.pem --keyFile sample/certs/key.pem -logtostderr=true
 ```
