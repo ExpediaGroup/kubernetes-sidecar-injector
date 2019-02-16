@@ -13,7 +13,7 @@ spec:
     spec:
       containers:
         - name: haystack-kube-sidecar-injector
-          image: mageshcmouli/haystack-kube-sidecar-injector:alpha-20190215161118
+          image: mageshcmouli/haystack-kube-sidecar-injector:alpha-20190216080826
           imagePullPolicy: IfNotPresent
           args:
             - -port=8443
