@@ -3,7 +3,8 @@ set -euxo pipefail
 set -o errexit
 set -o nounset
 
-CONTAINER_NAME=mageshcmouli/haystack-kube-sidecar-injector:alpha
+TAG=`date "+alpha-%Y%m%d%H%M%S"`
+CONTAINER_NAME=mageshcmouli/haystack-kube-sidecar-injector:${TAG}
 
 # clean pkg
 go clean
