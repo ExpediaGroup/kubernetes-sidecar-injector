@@ -3,6 +3,7 @@ package routes
 import (
 	"errors"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net/http"
 
@@ -64,7 +65,10 @@ func readRequestBody(r *http.Request) ([]byte, error) {
 	var body []byte
 
 	if r.Body != nil {
-		if data, err := ioutil.ReadAll(r.Body); err == nil {
+		defer r.Body.Close()
+		if data, err := ioutil.ReadAll(r.Body); err != nil {
+			io.Copy(ioutil.Discard, r.Body)
+		} else {
 			body = data
 		}
 	}
@@ -76,8 +80,7 @@ func readRequestBody(r *http.Request) ([]byte, error) {
 	// verify the content type is accurate
 	contentType := r.Header.Get("Content-Type")
 	if contentType != "application/json" {
-		message := fmt.Sprintf("received Content-Type=%s, Expected Content-Type is 'application/json'", contentType)
-		return nil, errors.New(message)
+		return nil, fmt.Errorf("received Content-Type=%s, Expected Content-Type is 'application/json'", contentType)
 	}
 
 	glog.Infof("Request received  : \n %s \n", string(body))
