@@ -1,6 +1,6 @@
 ## Build and deployment
 
-### Build and running locally
+### Build
 
 Install `dep`
 
@@ -10,7 +10,7 @@ go get -u github.com/golang/dep/cmd/dep
 
 Ensure [GOROOT, GOPATH and GOBIN](https://www.programming-books.io/essential/go/d6da4b8481f94757bae43be1fdfa9e73-gopath-goroot-gobin) environment variables are set correctly.
 
-Run 
+### Running locally 
 
 ```bash
 dep ensure
