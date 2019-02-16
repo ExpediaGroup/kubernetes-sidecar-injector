@@ -2,47 +2,56 @@ package main
 
 import (
 	"flag"
-	"github.com/golang/glog"
-	"github.com/mchandramouli/haystack-kube-sidecar-injector/httpd"
-	"github.com/mchandramouli/haystack-kube-sidecar-injector/routes"
 	"os"
 	"os/signal"
 	"syscall"
-	"time"
+
+	"github.com/golang/glog"
+	"github.com/mchandramouli/haystack-kube-sidecar-injector/httpd"
+	"github.com/mchandramouli/haystack-kube-sidecar-injector/routes"
 )
 
 type config struct {
-	httpdConf httpd.Conf
+	httpdConf         httpd.Conf
 	sideCarConfigFile string
 }
 
 func main() {
 	conf := readConfig()
-
 	simpleServer := httpd.NewSimpleServer(conf.httpdConf)
 
 	var err error
-	if err = addRoutes(simpleServer, conf); err == nil {
-		if err = startHttpsServer(simpleServer); err == nil {
-			glog.Infof("SimpleServer listening in port %v", simpleServer.Port())
-			wait(func() {
-				glog.Infof("Shutting down initiated")
-				simpleServer.Shutdown()
-			})
-			return
+	defer func() {
+		if err != nil {
+			glog.Errorf("Failed to start server: %v", err)
+			os.Exit(1)
 		}
+	}()
+
+	if err = addRoutes(simpleServer, conf); err != nil {
+		return
 	}
-	
-	glog.Errorf("Failed to start server: %v", err)
-	os.Exit(1)
+
+	if err = startHttpsServer(simpleServer); err != nil {
+		return
+	}
+
+	glog.Infof("SimpleServer listening in port %v", simpleServer.Port())
+	wait(func() {
+		glog.Infof("Shutting down initiated")
+		simpleServer.Shutdown()
+	})
+	return
 }
 
 func addRoutes(simpleServer httpd.SimpleServer, conf config) error {
 	mutator, err := routes.NewMutatorController(conf.sideCarConfigFile)
-	if mutator != nil {
-		simpleServer.AddRoute("/mutate", mutator.Mutate)
+	if err != nil {
+		return err
 	}
-	return err
+	
+	simpleServer.AddRoute("/mutate", mutator.Mutate)
+	return nil
 }
 
 func readConfig() config {
@@ -58,18 +67,11 @@ func readConfig() config {
 }
 
 func startHttpsServer(simpleServer httpd.SimpleServer) error {
-	errs := make(chan error, 1)
-	simpleServer.Start(errs)
-
-	var returnErr error
-	select {
-	case err := <-errs:
-		returnErr = err
-	case <-time.After(5 * time.Second):
-	}
-
-	close(errs)
-	return returnErr
+	errC := make(chan error, 1)
+	defer close(errC)
+	simpleServer.Start(errC)
+	err := <-errC
+	return err
 }
 
 func wait(callback func()) {

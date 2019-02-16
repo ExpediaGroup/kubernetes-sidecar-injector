@@ -22,41 +22,40 @@ type SimpleServer interface {
 }
 
 func NewSimpleServer(conf Conf) SimpleServer {
-	simpleServer := simpleServerImpl{
+	return &simpleServerImpl{
 		conf: conf,
+		mux:  http.NewServeMux(),
+		server: &http.Server{
+			Addr: fmt.Sprintf(":%d", conf.Port),
+		},
 	}
-	simpleServer.server = &http.Server{
-		Addr: fmt.Sprintf(":%v", simpleServer.conf.Port),
-	}
-	simpleServer.mux = http.NewServeMux()
-	return simpleServer
 }
 
 type simpleServerImpl struct {
-	conf Conf
+	conf   Conf
 	server *http.Server
-	mux *http.ServeMux
+	mux    *http.ServeMux
 }
 
-func (simpleServer simpleServerImpl) Port() int {
-	return simpleServer.conf.Port
+func (s *simpleServerImpl) Port() int {
+	return s.conf.Port
 }
 
-func (simpleServer simpleServerImpl) AddRoute(pattern string, route Route) {
-	simpleServer.mux.HandleFunc(pattern, route)
+func (s *simpleServerImpl) AddRoute(pattern string, route Route) {
+	s.mux.HandleFunc(pattern, route)
 }
 
-func (simpleServer simpleServerImpl) Start(errs chan error) {
-	simpleServer.server.Handler = simpleServer.mux
+func (s *simpleServerImpl) Start(errs chan error) {
+	s.server.Handler = s.mux
 	go func() {
-		if err := simpleServer.server.ListenAndServeTLS(
-			simpleServer.conf.CertFile,
-			simpleServer.conf.KeyFile); err != nil {
+		if err := s.server.ListenAndServeTLS(
+			s.conf.CertFile,
+			s.conf.KeyFile); err != nil {
 			errs <- err
 		}
 	}()
 }
 
-func (simpleServer simpleServerImpl) Shutdown() {
-	_ = simpleServer.server.Shutdown(context.Background())
+func (s *simpleServerImpl) Shutdown() {
+	s.server.Shutdown(context.Background())
 }
