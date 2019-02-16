@@ -39,7 +39,7 @@ go build
 * Send a sample request
 
 ```bash
-curl -kvX POST --header "Content-Type: application/json" -d @sample/admission-request.json https://localhost:8443/mutate ttps:/
+curl -kvX POST --header "Content-Type: application/json" -d @sample/admission-request.json https://localhost:8443/mutate
 ```
 
 ### Build and deploy in Kubernetes
@@ -81,9 +81,9 @@ haystack-kube-sidecar-injector-deployment-5b5874466-k4gnk   1/1       Running   
 ```
 #### Label the namespace
 
-Before deploying an pod to see the side car being injected, one need to do one additional step.  
+Before deploying a pod to see the side car being injected, one needs to do one additional step.  
 
-[Registration spec of this mutating webhook](deployment/mutatingwebhook-template.yaml#L22) specifies that this webhook be attached to only pods deployed in namespaces with a label `haystack-sidecar-injector: enabled`
+[Registration spec of this mutating webhook](deployment/mutatingwebhook-template.yaml#L22) specifies that this webhook be called only for pods deployed in namespaces with a label `haystack-sidecar-injector: enabled`
 
 Following spec applies this label to `default` namespace
 
