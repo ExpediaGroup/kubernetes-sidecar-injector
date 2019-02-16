@@ -8,41 +8,45 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
-	"time"
 )
 
 type config struct {
-	httpdConf httpd.Conf
+	httpdConf         httpd.Conf
 	sideCarConfigFile string
 }
 
 func main() {
 	conf := readConfig()
-
 	simpleServer := httpd.NewSimpleServer(conf.httpdConf)
 
 	var err error
-	if err = addRoutes(simpleServer, conf); err == nil {
-		if err = startHttpsServer(simpleServer); err == nil {
-			glog.Infof("SimpleServer listening in port %v", simpleServer.Port())
-			wait(func() {
-				glog.Infof("Shutting down initiated")
-				simpleServer.Shutdown()
-			})
-			return
+	defer func() {
+		if err != nil {
+			glog.Errorf("Failed to start server: %v", err)
+			os.Exit(1)
 		}
+	}()
+
+	if err = addRoutes(simpleServer, conf); err != nil {
+		return
 	}
-	
-	glog.Errorf("Failed to start server: %v", err)
-	os.Exit(1)
+
+	if err = startHttpServerAndWait(simpleServer); err != nil {
+		return
+	}
+
+	glog.Infof("Shutting down initiated")
+	simpleServer.Shutdown()
 }
 
 func addRoutes(simpleServer httpd.SimpleServer, conf config) error {
 	mutator, err := routes.NewMutatorController(conf.sideCarConfigFile)
-	if mutator != nil {
-		simpleServer.AddRoute("/mutate", mutator.Mutate)
+	if err != nil {
+		return err
 	}
-	return err
+
+	simpleServer.AddRoute("/mutate", mutator.Mutate)
+	return nil
 }
 
 func readConfig() config {
@@ -57,25 +61,28 @@ func readConfig() config {
 	return conf
 }
 
-func startHttpsServer(simpleServer httpd.SimpleServer) error {
-	errs := make(chan error, 1)
-	simpleServer.Start(errs)
-
-	var returnErr error
-	select {
-	case err := <-errs:
-		returnErr = err
-	case <-time.After(5 * time.Second):
-	}
-
-	close(errs)
-	return returnErr
-}
-
-func wait(callback func()) {
-	// subscribe to process shutdown signal
+func startHttpServerAndWait(simpleServer httpd.SimpleServer) error {
+	errC := make(chan error, 1)
 	signalChan := make(chan os.Signal, 1)
 	signal.Notify(signalChan, syscall.SIGINT, syscall.SIGTERM)
-	<-signalChan
-	callback()
+
+	defer func() {
+		close(errC)
+		close(signalChan)
+	}()
+
+	glog.Infof("SimpleServer starting to listen in port %v", simpleServer.Port())
+
+	simpleServer.Start(errC)
+
+	// block until an error or signal from os to
+	// terminate the process
+	var retErr error
+	select {
+	case err := <-errC:
+		retErr = err
+	case <-signalChan:
+	}
+
+	return retErr
 }
