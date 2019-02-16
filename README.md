@@ -1,3 +1,15 @@
+Table of Contents
+=================
+
+* [Build and deployment](#build-and-deployment)
+   * [Build](#build)
+   * [Running locally](#running-locally)
+   * [Build and deploy in Kubernetes](#build-and-deploy-in-kubernetes)
+      * [Build](#build-1)
+      * [Deploy](#deploy)
+      * [Label the namespace](#label-the-namespace)
+      * [Test the webhook](#test-the-webhook)
+
 ## Build and deployment
 
 ### Build
