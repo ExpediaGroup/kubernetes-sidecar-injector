@@ -39,7 +39,7 @@ go build
 * Send a sample request
 
 ```bash
-curl -kvX POST --header "Content-Type: application/json" -d @sample/a//localhost:8443/mutate ttps:/
+curl -kvX POST --header "Content-Type: application/json" -d @sample/admission-request.json https://localhost:8443/mutate ttps:/
 ```
 
 ### Build and deploy in Kubernetes
@@ -65,8 +65,8 @@ The command above does the following steps
 * Creates a key pair, certificate request and gets it signed by Kubernetes CA. Uploads the signed certificate and private key to Kubernetes as a secret using [deployment/create-server-cert.sh](deployment/create-server-cert.sh)
 * Exports Kubernetes CA file and creates a yaml file to register mutating webhook using [deployment/replace-ca-token.sh](deployment/replace-ca-token.sh)
 * Uploads a config map to be used by haystack agent as config file [deployment/haystack-agent-configmap.yaml](deployment/haystack-agent-configmap.yaml)
-* Uploads a config map with the container and volume spec to be injected as side cat [deployment/sidecar-configmap.yaml](deployment/sidecar-configmap.yaml)
-* Uploads a deployment spec for `haystack-kube-sidecar-injector` [deployment/sidecar-injector-deployment.yaml](deployment/sidecar-injector-deployment.yaml). This spec use `sidecar-configmap` from previous step and `server certificate` from first step
+* Uploads a config map with the container and volume spec to be injected as side car [deployment/sidecar-configmap.yaml](deployment/sidecar-configmap.yaml)
+* Uploads a deployment spec for `haystack-kube-sidecar-injector` [deployment/sidecar-injector-deployment.yaml](deployment/sidecar-injector-deployment.yaml). This spec uses `sidecar-configmap` from previous step and `server certificate` from first step
 * Uploads a service spec for sidecar-injector deployment [deployment/sidecar-injector-service.yaml](deployment/sidecar-injector-service.yaml)
 * Uploads a spec to register the mutating webhook that was generated in step 2 [deployment/generated-mutatingwebhook.yaml](deployment/generated-mutatingwebhook.yaml)
 
