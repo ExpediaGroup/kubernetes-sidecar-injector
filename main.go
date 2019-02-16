@@ -31,10 +31,12 @@ func main() {
 		return
 	}
 
-	err = startHttpServerAndWait(simpleServer, func() {
-		glog.Infof("Shutting down initiated")
-		simpleServer.Shutdown()
-	})
+	if err = startHttpServerAndWait(simpleServer); err != nil {
+		return
+	}
+
+	glog.Infof("Shutting down initiated")
+	simpleServer.Shutdown()
 }
 
 func addRoutes(simpleServer httpd.SimpleServer, conf config) error {
@@ -42,7 +44,7 @@ func addRoutes(simpleServer httpd.SimpleServer, conf config) error {
 	if err != nil {
 		return err
 	}
-	
+
 	simpleServer.AddRoute("/mutate", mutator.Mutate)
 	return nil
 }
@@ -59,9 +61,8 @@ func readConfig() config {
 	return conf
 }
 
-func startHttpServerAndWait(simpleServer httpd.SimpleServer, callback func()) error {
+func startHttpServerAndWait(simpleServer httpd.SimpleServer) error {
 	errC := make(chan error, 1)
-
 	signalChan := make(chan os.Signal, 1)
 	signal.Notify(signalChan, syscall.SIGINT, syscall.SIGTERM)
 
@@ -74,11 +75,13 @@ func startHttpServerAndWait(simpleServer httpd.SimpleServer, callback func()) er
 
 	simpleServer.Start(errC)
 
-	//do not block. check if start has an error in the channel
+	// block until an error or signal from os to
+	// terminate the process
 	var retErr error
 	select {
-	case err := <-errC: retErr = err
-	case <-signalChan: callback()
+	case err := <-errC:
+		retErr = err
+	case <-signalChan:
 	}
 
 	return retErr
