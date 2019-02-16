@@ -52,7 +52,6 @@ func (mutator Mutator) Mutate(req []byte) ([]byte, error) {
 	_, _, err := deserializer.Decode(req, nil, &admissionReviewReq)
 
 	if err == nil && admissionReviewReq.Request != nil {
-		admissionReviewResp.Response.UID = admissionReviewReq.Request.UID
 		admissionResponse = mutate(&admissionReviewReq, mutator.SideCar)
 	} else {
 		message := "Failed to decode request"
@@ -98,6 +97,7 @@ func mutate(ar *v1beta1.AdmissionReview, sideCar *SideCar) *v1beta1.AdmissionRes
 	glog.Infof("AdmissionResponse: Patch: %v\n", string(patchBytes))
 	pt := v1beta1.PatchTypeJSONPatch
 	return &v1beta1.AdmissionResponse{
+		UID: req.UID,
 		Allowed:   true,
 		Patch:     patchBytes,
 		PatchType: &pt,

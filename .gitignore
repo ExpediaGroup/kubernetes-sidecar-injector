@@ -3,4 +3,6 @@
 *.iml
 *.ipr
 *.iws
+haystack-kube-sidecar-injector
+generated-*.yaml
 

@@ -1,0 +1,10 @@
+{
+  "kind": "Namespace",
+  "apiVersion": "v1",
+  "metadata": {
+    "name": "default",
+    "labels": {
+      "haystack-sidecar-injector": "enabled"
+    }
+  }
+}

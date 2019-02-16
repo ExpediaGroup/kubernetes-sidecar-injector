@@ -1,0 +1,22 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: echo-server-deployment
+  labels:
+    app: echo-server
+spec:
+  replicas: 1
+  template:
+    metadata:
+      annotations:
+        haystack-kube-sidecar-injector.expedia.com/inject: "yes"
+      labels:
+        app: echo-server
+    spec:
+      containers:
+        - name: echo-server
+          image: hashicorp/http-echo
+          imagePullPolicy: IfNotPresent
+          args:
+            - -listen=:8080
+            - -text="hello world"
