@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: echo-server-svc
+  labels:
+    app: echo-server
+spec:
+  ports:
+    - port: 8080
+      targetPort: 8080
+  type: NodePort
+  selector:
+    app: echo-server
