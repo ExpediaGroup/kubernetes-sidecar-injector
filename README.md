@@ -2,7 +2,7 @@ Table of Contents
 =================
 
 * [Build and deployment](#build-and-deployment)
-   * [Build](#build-and-run-locally)
+   * [Build and run locally](#build-and-run-locally)
    * [Build and deploy in Kubernetes](#build-and-deploy-in-kubernetes)
       * [Build](#build-1)
       * [Deploy](#deploy)
