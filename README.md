@@ -27,11 +27,15 @@ curl -kvX POST --header "Content-Type: application/json" -d @sample/a//localhost
 
 ### Build and deploy in Kubernetes
 
+#### Build
+
 To build and push docker container
 
 ```bash
 ./build.sh push
 ```
+
+#### Deploy
 
 To deploy and test this in [minikube](https://kubernetes.io/docs/tasks/tools/install-minikube/)
 
@@ -58,6 +62,7 @@ NAME                                                        READY     STATUS    
 haystack-kube-sidecar-injector-deployment-5b5874466-k4gnk   1/1       Running   0          1m
 
 ```
+#### Label the namespace
 
 Before deploying an pod to see the side car being injected, one need to do one additional step.  
 
@@ -69,7 +74,7 @@ Following spec applies this label to `default` namespace
 kubectl apply -f sample/namespace-label.yaml
 ```
 
-### Test the webhook
+#### Test the webhook
 
 One can run the following command to deploy a sample `echo-server`. Note, this [deployment spec carries an annotation](sample/echo-server.yaml#L12) `haystack-kube-sidecar-injector.expedia.com/inject: "yes"` that triggers injection of the sidecar.
 
