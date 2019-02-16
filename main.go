@@ -2,13 +2,12 @@ package main
 
 import (
 	"flag"
-	"os"
-	"os/signal"
-	"syscall"
-
 	"github.com/golang/glog"
 	"github.com/mchandramouli/haystack-kube-sidecar-injector/httpd"
 	"github.com/mchandramouli/haystack-kube-sidecar-injector/routes"
+	"os"
+	"os/signal"
+	"syscall"
 )
 
 type config struct {
@@ -32,16 +31,10 @@ func main() {
 		return
 	}
 
-	if err = startHttpsServer(simpleServer); err != nil {
-		return
-	}
-
-	glog.Infof("SimpleServer listening in port %v", simpleServer.Port())
-	wait(func() {
+	err = startHttpServerAndWait(simpleServer, func() {
 		glog.Infof("Shutting down initiated")
 		simpleServer.Shutdown()
 	})
-	return
 }
 
 func addRoutes(simpleServer httpd.SimpleServer, conf config) error {
@@ -66,18 +59,27 @@ func readConfig() config {
 	return conf
 }
 
-func startHttpsServer(simpleServer httpd.SimpleServer) error {
+func startHttpServerAndWait(simpleServer httpd.SimpleServer, callback func()) error {
 	errC := make(chan error, 1)
-	defer close(errC)
-	simpleServer.Start(errC)
-	err := <-errC
-	return err
-}
 
-func wait(callback func()) {
-	// subscribe to process shutdown signal
 	signalChan := make(chan os.Signal, 1)
 	signal.Notify(signalChan, syscall.SIGINT, syscall.SIGTERM)
-	<-signalChan
-	callback()
+
+	defer func() {
+		close(errC)
+		close(signalChan)
+	}()
+
+	glog.Infof("SimpleServer starting to listen in port %v", simpleServer.Port())
+
+	simpleServer.Start(errC)
+
+	//do not block. check if start has an error in the channel
+	var retErr error
+	select {
+	case err := <-errC: retErr = err
+	case <-signalChan: callback()
+	}
+
+	return retErr
 }
