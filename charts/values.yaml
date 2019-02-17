@@ -5,3 +5,5 @@
 
 service: haystack-kube-sidecar-injector-svc
 namespace: default
+image : mageshcmouli/haystack-kube-sidecar-injector
+imageTag: alpha-20190216080826
