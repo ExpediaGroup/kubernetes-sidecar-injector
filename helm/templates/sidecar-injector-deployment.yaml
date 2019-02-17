@@ -1,0 +1,37 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: haystack-kube-sidecar-injector-deployment
+  labels:
+    app: haystack-kube-sidecar-injector
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: haystack-kube-sidecar-injector
+    spec:
+      containers:
+        - name: haystack-kube-sidecar-injector
+          image: mageshcmouli/haystack-kube-sidecar-injector:alpha-20190216080826
+          imagePullPolicy: IfNotPresent
+          args:
+            - -port=8443
+            - -certFile=/opt/haystack-kube-sidecar-injector/certs/cert.pem
+            - -keyFile=/opt/haystack-kube-sidecar-injector/certs/key.pem
+            - -sideCar=/opt/haystack-kube-sidecar-injector/sidecarconfig.yaml
+            - -logtostderr
+            - 2>&1
+          volumeMounts:
+            - name: haystack-injector-certs
+              mountPath: /opt/haystack-kube-sidecar-injector/certs
+              readOnly: true
+            - name: haystack-sidecar-config
+              mountPath: /opt/haystack-kube-sidecar-injector
+      volumes:
+        - name: haystack-injector-certs
+          secret:
+            secretName: haystack-kube-sidecar-injector-certs
+        - name: haystack-sidecar-config
+          configMap:
+            name: haystack-sidecar-configmap
