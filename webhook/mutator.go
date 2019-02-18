@@ -39,6 +39,7 @@ type patchOperation struct {
 type SideCar struct {
 	Containers []corev1.Container `yaml:"containers"`
 	Volumes    []corev1.Volume    `yaml:"volumes"`
+	ImagePullSecrets    []corev1.LocalObjectReference `yaml:"imagePullSecrets"`
 }
 
 type Mutator struct {
@@ -151,6 +152,8 @@ func createPatch(pod *corev1.Pod, sidecarConfig *SideCar, annotations map[string
 
 	patch = append(patch, addContainer(pod.Spec.Containers, sidecarConfig.Containers, "/spec/containers")...)
 	patch = append(patch, addVolume(pod.Spec.Volumes, sidecarConfig.Volumes, "/spec/volumes")...)
+	patch = append(patch, addImagePullSecrets(pod.Spec.ImagePullSecrets, sidecarConfig.ImagePullSecrets, "/spec/imagePullSecrets")...)
+
 	patch = append(patch, updateAnnotation(pod.Annotations, annotations)...)
 
 	return json.Marshal(patch)
@@ -188,6 +191,28 @@ func addVolume(target, added []corev1.Volume, basePath string) []patchOperation 
 		if first {
 			first = false
 			value = []corev1.Volume{add}
+		} else {
+			path = path + "/-"
+		}
+		patch = append(patch, patchOperation{
+			Op:    "add",
+			Path:  path,
+			Value: value,
+		})
+	}
+	return patch
+}
+
+func addImagePullSecrets(target, added  []corev1.LocalObjectReference, basePath string) []patchOperation {
+	var patch []patchOperation
+	first := len(target) == 0
+	var value interface{}
+	for _, add := range added {
+		value = add
+		path := basePath
+		if first {
+			first = false
+			value = []corev1.LocalObjectReference{add}
 		} else {
 			path = path + "/-"
 		}
