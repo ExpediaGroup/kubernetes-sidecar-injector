@@ -1,1 +1,108 @@
-{"kind":"AdmissionReview","apiVersion":"admission.k8s.io/v1beta1","request":{"uid":"6e397dab-317d-11e9-b50f-080027bbd2ff","kind":{"group":"","version":"v1","kind":"Pod"},"resource":{"group":"","version":"v1","resource":"pods"},"namespace":"default","operation":"CREATE","userInfo":{"username":"system:serviceaccount:kube-system:replicaset-controller","uid":"8aad6d23-2b1f-11e9-b91c-080027bbd2ff","groups":["system:serviceaccounts","system:serviceaccounts:kube-system","system:authenticated"]},"object":{"metadata":{"generateName":"echo-server-deployment-849b87649d-","creationTimestamp":null,"labels":{"app":"echo-server","pod-template-hash":"849b87649d"},"annotations":{"haystack-kube-sidecar-injector.expedia.com/inject":"yes"},"ownerReferences":[{"apiVersion":"apps/v1","kind":"ReplicaSet","name":"echo-server-deployment-849b87649d","uid":"6e3669da-317d-11e9-b50f-080027bbd2ff","controller":true,"blockOwnerDeletion":true}]},"spec":{"volumes":[{"name":"default-token-fjpxj","secret":{"secretName":"default-token-fjpxj"}}],"containers":[{"name":"echo-server","image":"hashicorp/http-echo","args":["-listen=:8080","-text=\"hello world\""],"resources":{},"volumeMounts":[{"name":"default-token-fjpxj","readOnly":true,"mountPath":"/var/run/secrets/kubernetes.io/serviceaccount"}],"terminationMessagePath":"/dev/termination-log","terminationMessagePolicy":"File","imagePullPolicy":"IfNotPresent"}],"restartPolicy":"Always","terminationGracePeriodSeconds":30,"dnsPolicy":"ClusterFirst","serviceAccountName":"default","serviceAccount":"default","securityContext":{},"schedulerName":"default-scheduler","tolerations":[{"key":"node.kubernetes.io/not-ready","operator":"Exists","effect":"NoExecute","tolerationSeconds":300},{"key":"node.kubernetes.io/unreachable","operator":"Exists","effect":"NoExecute","tolerationSeconds":300}],"priority":0,"enableServiceLinks":true},"status":{}},"oldObject":null,"dryRun":false}}
+{
+  "kind": "AdmissionReview",
+  "apiVersion": "admission.k8s.io/v1beta1",
+  "request": {
+    "uid": "6e397dab-317d-11e9-b50f-080027bbd2ff",
+    "kind": {
+      "group": "",
+      "version": "v1",
+      "kind": "Pod"
+    },
+    "resource": {
+      "group": "",
+      "version": "v1",
+      "resource": "pods"
+    },
+    "namespace": "default",
+    "operation": "CREATE",
+    "userInfo": {
+      "username": "system:serviceaccount:kube-system:replicaset-controller",
+      "uid": "8aad6d23-2b1f-11e9-b91c-080027bbd2ff",
+      "groups": [
+        "system:serviceaccounts",
+        "system:serviceaccounts:kube-system",
+        "system:authenticated"
+      ]
+    },
+    "object": {
+      "metadata": {
+        "generateName": "echo-server-deployment-849b87649d-",
+        "creationTimestamp": null,
+        "labels": {
+          "app": "echo-server",
+          "pod-template-hash": "849b87649d"
+        },
+        "annotations": {
+          "haystack-kube-sidecar-injector.expedia.com/inject": "yes"
+        },
+        "ownerReferences": [
+          {
+            "apiVersion": "apps/v1",
+            "kind": "ReplicaSet",
+            "name": "echo-server-deployment-849b87649d",
+            "uid": "6e3669da-317d-11e9-b50f-080027bbd2ff",
+            "controller": true,
+            "blockOwnerDeletion": true
+          }
+        ]
+      },
+      "spec": {
+        "volumes": [
+          {
+            "name": "default-token-fjpxj",
+            "secret": {
+              "secretName": "default-token-fjpxj"
+            }
+          }
+        ],
+        "containers": [
+          {
+            "name": "echo-server",
+            "image": "hashicorp/http-echo",
+            "args": [
+              "-listen=:8080",
+              "-text=\"hello world\""
+            ],
+            "resources": {},
+            "volumeMounts": [
+              {
+                "name": "default-token-fjpxj",
+                "readOnly": true,
+                "mountPath": "/var/run/secrets/kubernetes.io/serviceaccount"
+              }
+            ],
+            "terminationMessagePath": "/dev/termination-log",
+            "terminationMessagePolicy": "File",
+            "imagePullPolicy": "IfNotPresent"
+          }
+        ],
+        "restartPolicy": "Always",
+        "terminationGracePeriodSeconds": 30,
+        "dnsPolicy": "ClusterFirst",
+        "serviceAccountName": "default",
+        "serviceAccount": "default",
+        "securityContext": {},
+        "schedulerName": "default-scheduler",
+        "tolerations": [
+          {
+            "key": "node.kubernetes.io/not-ready",
+            "operator": "Exists",
+            "effect": "NoExecute",
+            "tolerationSeconds": 300
+          },
+          {
+            "key": "node.kubernetes.io/unreachable",
+            "operator": "Exists",
+            "effect": "NoExecute",
+            "tolerationSeconds": 300
+          }
+        ],
+        "priority": 0,
+        "enableServiceLinks": true
+      },
+      "status": {}
+    },
+    "oldObject": null,
+    "dryRun": false
+  }
+}

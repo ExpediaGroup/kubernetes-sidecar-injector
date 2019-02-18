@@ -1,3 +1,5 @@
+{{- $ca := genCA "admission-controller-ca" 3650 }}
+
 apiVersion: admissionregistration.k8s.io/v1beta1
 kind: MutatingWebhookConfiguration
 metadata:
@@ -11,12 +13,21 @@ webhooks:
         name: haystack-kube-sidecar-injector-svc
         namespace: default
         path: "/mutate"
-      caBundle: ${CA_BUNDLE}
+      caBundle: {{ b64enc $ca.Cert }}
+    failurePolicy:  Fail
     rules:
       - operations: [ "CREATE" ]
         apiGroups: [""]
         apiVersions: ["v1"]
         resources: ["pods"]
-    namespaceSelector:
-      matchLabels:
-        haystack-sidecar-injector: enabled
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: haystack-kube-sidecar-injector-certs
+  labels:
+    app: haystack-kube-sidecar-injector-certs
+data:
+  cert.pem: {{ b64enc $ca.Cert }}
+  key.pem: {{ b64enc $ca.Key }}
