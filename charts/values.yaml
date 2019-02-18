@@ -3,7 +3,6 @@
 # Declare name/value pairs to be passed into your templates.
 # name: value
 
-service: haystack-kube-sidecar-injector-svc
-namespace: default
-image : mageshcmouli/haystack-kube-sidecar-injector
-imageTag: alpha-20190216080826
+image:
+  repository: mageshcmouli/haystack-kube-sidecar-injector
+  tag: alpha-20190216080826

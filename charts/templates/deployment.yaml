@@ -13,7 +13,7 @@ spec:
     spec:
       containers:
         - name: haystack-kube-sidecar-injector
-          image: {{ .Values.image }}:{{ .Values.imageTag }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: IfNotPresent
           args:
             - -port=8443
