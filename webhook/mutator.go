@@ -37,9 +37,9 @@ type patchOperation struct {
 }
 
 type SideCar struct {
-	Containers []corev1.Container `yaml:"containers"`
-	Volumes    []corev1.Volume    `yaml:"volumes"`
-	ImagePullSecrets    []corev1.LocalObjectReference `yaml:"imagePullSecrets"`
+	Containers       []corev1.Container            `yaml:"containers"`
+	Volumes          []corev1.Volume               `yaml:"volumes"`
+	ImagePullSecrets []corev1.LocalObjectReference `yaml:"imagePullSecrets"`
 }
 
 type Mutator struct {
@@ -203,7 +203,7 @@ func addVolume(target, added []corev1.Volume, basePath string) []patchOperation 
 	return patch
 }
 
-func addImagePullSecrets(target, added  []corev1.LocalObjectReference, basePath string) []patchOperation {
+func addImagePullSecrets(target, added []corev1.LocalObjectReference, basePath string) []patchOperation {
 	var patch []patchOperation
 	first := len(target) == 0
 	var value interface{}

@@ -4,36 +4,60 @@ Table of Contents
 =================
 
 * [Build and deployment](#build-and-deployment)
-   * [Build and run locally](#build-and-run-locally)
-   * [Build and deploy in Kubernetes](#build-and-deploy-in-kubernetes)
-      * [Build](#build-1)
-      * [Deploy](#deploy)
-      * [Label the namespace](#label-the-namespace)
-      * [Test the webhook](#test-the-webhook)
+  * [Dependencies](#dependencies)
+  * [Build and run locally](#build-and-run-locally)
+  * [Build and run with docker](#build-and-run-with-docker)
+  * [Build and deploy in Kubernetes](#build-and-deploy-in-kubernetes)
+     * [Build](#build)
+     * [Deploy](#deploy)
+     * [Label the namespace](#label-the-namespace)
+     * [Test the webhook](#test-the-webhook)
 
 ## Build and deployment
 
-### Build and run locally
+### Dependencies
 
-* Install `dep`
+* Install `dep` and `goimports`
 
 ```bash
 go get -u github.com/golang/dep/cmd/dep
+go get golang.org/x/tools/cmd/goimports
 ```
 
 * Ensure [GOROOT, GOPATH and GOBIN](https://www.programming-books.io/essential/go/d6da4b8481f94757bae43be1fdfa9e73-gopath-goroot-gobin) environment variables are set correctly.
 
+### Build and run locally
+
 * Build
 
 ```bash
-dep ensure
-go build
+make build
 ```
 
 * Run
 
 ```bash
 ./haystack-kube-sidecar-injector -port=8443 -certFile=sample/certs/cert.pem  -keyFile=sample/certs/key.pem -sideCar=sample/sidecar.yaml -logtostderr
+```
+
+* Send a sample request
+
+```bash
+curl -kvX POST --header "Content-Type: application/json" -d @sample/admission-request.json https://localhost:8443/mutate
+```
+
+### Build and run with docker
+
+* Build
+
+```bash
+make docker
+```
+
+* Run
+
+```bash
+docker run -d --name injector -p 8443:443 --mount type=bind,src=/Users/mchandramouli/src/go/src/github.com/mchandramouli/haystack-kube-sidecar-injector/sample,dst=/etc/mutator mageshcmouli/haystack-kube-sidecar-injector:latest -logtostderr
 ```
 
 * Send a sample request
@@ -49,7 +73,7 @@ curl -kvX POST --header "Content-Type: application/json" -d @sample/admission-re
 To build and push docker container
 
 ```bash
-./build.sh push
+make release
 ```
 
 #### Deploy
