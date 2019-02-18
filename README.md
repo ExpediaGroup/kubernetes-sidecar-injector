@@ -52,12 +52,15 @@ To build and push docker container
 ./build.sh push
 ```
 
-#### Deploy
+#### Deploy 
 
+We support deployment of the sidecar using helm as well as kubectl.
+
+#### Using Kubectl
 To deploy and test this in [minikube](https://kubernetes.io/docs/tasks/tools/install-minikube/)
 
 ```bash
-./deployment/deploy.sh
+./deployment/kubectl/deploy.sh
 ``` 
 
 The command above does the following steps
@@ -79,6 +82,38 @@ NAME                                                        READY     STATUS    
 haystack-kube-sidecar-injector-deployment-5b5874466-k4gnk   1/1       Running   0          1m
 
 ```
+
+### Using Helm
+
+##### **Steps**
+
+Follow the steps mentioned below to install the helm chart
+
+1. install the helm client based on the instructions given [here](https://docs.helm.sh/using_helm/#installing-helm)
+2. configure helm to point to kubernetes cluster
+```console
+$ minikube start
+$ helm init
+```
+3. move to the directory where the code is cloned
+4. run the following command
+```console
+$ helm install --name haystack-agent-webhook ./deployment/helm
+```
+
+##### **Chart Configuration**
+
+The following table lists the configurable parameters of the helm chart and
+their default values.
+
+| Parameter                   | Description                                                                                | Default         |
+|:----------------------------|:-------------------------------------------------------------------------------------------|:----------------|
+| `image.repository`          | Container image to use                                                                     | `registry`      |
+| `image.tag`                 | Container image tag to deploy                                                                 `0.4.3`      |
+
+Specify each parameter using the `--set key=value[,key=value]` argument to
+`helm install`.
+
 #### Label the namespace
 
 Before deploying a pod to see the side car being injected, one needs to do one additional step.  
