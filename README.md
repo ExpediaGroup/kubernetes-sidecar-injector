@@ -107,7 +107,7 @@ haystack-kube-sidecar-injector-deployment-5b5874466-k4gnk   1/1       Running   
 
 ```
 
-### Using Helm
+#### Using Helm
 
 ##### **Steps**
 
