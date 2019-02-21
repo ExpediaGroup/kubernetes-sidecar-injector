@@ -10,16 +10,15 @@ Table of Contents
      * [Build and run with docker](#build-and-run-with-docker)
      * [Build and deploy in Kubernetes](#build-and-deploy-in-kubernetes)
         * [Build](#build)
-        * [Deploy](#deploy)
-          * [Using Kubectl](#using-kubectl)
-          * [Using Helm](#using-helm)
+        * [Deploy using Kubectl](#deploy-using-kubectl)
+        * [Deploy using Helm](#deploy-using-helm)
         * [Label the namespace](#label-the-namespace)
         * [Test the webhook](#test-the-webhook)
 
 
-## Build and deployment
+# Build and deployment
 
-### Dependencies
+## Dependencies
 
 * Install `dep` and `goimports`
 
@@ -30,7 +29,7 @@ go get golang.org/x/tools/cmd/goimports
 
 * Ensure [GOROOT, GOPATH and GOBIN](https://www.programming-books.io/essential/go/d6da4b8481f94757bae43be1fdfa9e73-gopath-goroot-gobin) environment variables are set correctly.
 
-### Build and run locally
+## Build and run locally
 
 * Build
 
@@ -50,7 +49,7 @@ make build
 curl -kvX POST --header "Content-Type: application/json" -d @sample/admission-request.json https://localhost:8443/mutate
 ```
 
-### Build and run with docker
+## Build and run with docker
 
 * Build
 
@@ -70,9 +69,9 @@ docker run -d --name injector -p 8443:443 --mount type=bind,src=/Users/mchandram
 curl -kvX POST --header "Content-Type: application/json" -d @sample/admission-request.json https://localhost:8443/mutate
 ```
 
-### Build and deploy in Kubernetes
+## Build and deploy in Kubernetes
 
-#### Build
+### Build
 
 To build and push docker container
 
@@ -80,11 +79,7 @@ To build and push docker container
 make release
 ```
 
-#### Deploy 
-
-We support deployment of the sidecar using helm as well as kubectl.
-
-#### Using Kubectl
+### Deploy using Kubectl
 To deploy and test this in [minikube](https://kubernetes.io/docs/tasks/tools/install-minikube/)
 
 ```bash
@@ -111,7 +106,7 @@ haystack-kube-sidecar-injector-deployment-5b5874466-k4gnk   1/1       Running   
 
 ```
 
-#### Using Helm
+### Deploy using Helm
 
 Follow the steps mentioned below to install the helm chart
 
@@ -138,7 +133,7 @@ their default values.
 Specify each parameter using the `--set key=value[,key=value]` argument to
 `helm install`.
 
-#### Label the namespace
+### Label the namespace
 
 Before deploying a pod to see the side car being injected, one needs to do one additional step.  
 
@@ -150,7 +145,7 @@ Following spec applies this label to `default` namespace
 kubectl apply -f sample/namespace-label.yaml
 ```
 
-#### Test the webhook
+### Test the webhook
 
 One can run the following command to deploy a sample `echo-server`. Note, this [deployment spec carries an annotation](sample/echo-server.yaml#L12) `haystack-kube-sidecar-injector.expedia.com/inject: "yes"` that triggers injection of the sidecar.
 
