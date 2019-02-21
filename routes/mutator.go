@@ -9,7 +9,7 @@ import (
 
 	"github.com/ghodss/yaml"
 	"github.com/golang/glog"
-	"github.com/mchandramouli/haystack-kube-sidecar-injector/webhook"
+	"github.com/ExpediaDotCom/haystack-kube-sidecar-injector/webhook"
 )
 
 func loadConfig(sideCarConfigFile string) (*webhook.SideCar, error) {

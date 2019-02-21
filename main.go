@@ -7,8 +7,8 @@ import (
 	"syscall"
 
 	"github.com/golang/glog"
-	"github.com/mchandramouli/haystack-kube-sidecar-injector/httpd"
-	"github.com/mchandramouli/haystack-kube-sidecar-injector/routes"
+	"github.com/ExpediaDotCom/haystack-kube-sidecar-injector/httpd"
+	"github.com/ExpediaDotCom/haystack-kube-sidecar-injector/routes"
 )
 
 type config struct {
