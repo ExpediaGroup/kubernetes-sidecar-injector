@@ -25,6 +25,7 @@ Table of Contents
 ```bash
 go get -u github.com/golang/dep/cmd/dep
 go get golang.org/x/tools/cmd/goimports
+go get -u golang.org/x/lint/golint
 ```
 
 * Ensure [GOROOT, GOPATH and GOBIN](https://www.programming-books.io/essential/go/d6da4b8481f94757bae43be1fdfa9e73-gopath-goroot-gobin) environment variables are set correctly.
