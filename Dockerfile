@@ -1,4 +1,4 @@
-FROM alpine:latest
+FROM scratch
 
 ADD haystack-kube-sidecar-injector /haystack-kube-sidecar-injector
     
