@@ -1,6 +1,6 @@
 SHELL := /bin/bash
 TAG := $(shell date "+alpha-%Y%m%d%H%M%S")
-CONTAINER_NAME=mageshcmouli/haystack-kube-sidecar-injector
+CONTAINER_NAME=expediadotcom/haystack-kube-sidecar-injector
 CONTAINER_VERSION=$(CONTAINER_NAME):$(TAG)
 CONTAINER_LATEST=$(CONTAINER_NAME):latest
 SRC=$(shell find . -type f -name '*.go' -not -path "./vendor/*")

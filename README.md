@@ -60,7 +60,7 @@ make docker
 * Run
 
 ```bash
-docker run -d --name injector -p 8443:443 --mount type=bind,src=/Users/mchandramouli/src/go/src/github.com/mchandramouli/haystack-kube-sidecar-injector/sample,dst=/etc/mutator mageshcmouli/haystack-kube-sidecar-injector:latest -logtostderr
+docker run -d --name injector -p 8443:443 --mount type=bind,src=/Users/mchandramouli/src/go/src/github.com/mchandramouli/haystack-kube-sidecar-injector/sample,dst=/etc/mutator expediadotcom/haystack-kube-sidecar-injector:latest -logtostderr
 ```
 
 * Send a sample request
@@ -127,7 +127,7 @@ their default values.
 
 | Parameter                   | Description                                                                                | Default         |
 |:----------------------------|:-------------------------------------------------------------------------------------------|:----------------|
-| `image.repository`          | Container image to use                                                                     | `mageshcmouli/haystack-kube-sidecar-injector`      |
+| `image.repository`          | Container image to use                                                                     | `expediadotcom/haystack-kube-sidecar-injector`      |
 | `image.tag`                 | Container image tag to deploy                                                              |  `latest`      |
 
 Specify each parameter using the `--set key=value[,key=value]` argument to

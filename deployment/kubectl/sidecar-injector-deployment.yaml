@@ -13,7 +13,7 @@ spec:
     spec:
       containers:
         - name: haystack-kube-sidecar-injector
-          image: mageshcmouli/haystack-kube-sidecar-injector:latest
+          image: expediadotcom/haystack-kube-sidecar-injector:latest
           imagePullPolicy: IfNotPresent
           args:
             - -port=8443
