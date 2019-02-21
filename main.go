@@ -6,9 +6,9 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/golang/glog"
 	"github.com/ExpediaDotCom/haystack-kube-sidecar-injector/httpd"
 	"github.com/ExpediaDotCom/haystack-kube-sidecar-injector/routes"
+	"github.com/golang/glog"
 )
 
 type config struct {

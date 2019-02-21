@@ -7,9 +7,9 @@ import (
 	"io/ioutil"
 	"net/http"
 
+	"github.com/ExpediaDotCom/haystack-kube-sidecar-injector/webhook"
 	"github.com/ghodss/yaml"
 	"github.com/golang/glog"
-	"github.com/ExpediaDotCom/haystack-kube-sidecar-injector/webhook"
 )
 
 func loadConfig(sideCarConfigFile string) (*webhook.SideCar, error) {
