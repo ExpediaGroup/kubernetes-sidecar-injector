@@ -3,15 +3,19 @@
 Table of Contents
 =================
 
-* [Build and deployment](#build-and-deployment)
-  * [Dependencies](#dependencies)
-  * [Build and run locally](#build-and-run-locally)
-  * [Build and run with docker](#build-and-run-with-docker)
-  * [Build and deploy in Kubernetes](#build-and-deploy-in-kubernetes)
-     * [Build](#build)
-     * [Deploy](#deploy)
-     * [Label the namespace](#label-the-namespace)
-     * [Test the webhook](#test-the-webhook)
+* [Table of Contents](#table-of-contents)
+  * [Build and deployment](#build-and-deployment)
+     * [Dependencies](#dependencies)
+     * [Build and run locally](#build-and-run-locally)
+     * [Build and run with docker](#build-and-run-with-docker)
+     * [Build and deploy in Kubernetes](#build-and-deploy-in-kubernetes)
+        * [Build](#build)
+        * [Deploy](#deploy)
+          * [Using Kubectl](#using-kubectl)
+          * [Using Helm](#using-helm)
+        * [Label the namespace](#label-the-namespace)
+        * [Test the webhook](#test-the-webhook)
+
 
 ## Build and deployment
 
@@ -109,8 +113,6 @@ haystack-kube-sidecar-injector-deployment-5b5874466-k4gnk   1/1       Running   
 
 #### Using Helm
 
-##### **Steps**
-
 Follow the steps mentioned below to install the helm chart
 
 1. install the helm client based on the instructions given [here](https://docs.helm.sh/using_helm/#installing-helm)
@@ -125,15 +127,13 @@ $ helm init
 $ helm install --name haystack-agent-webhook ./deployment/helm
 ```
 
-##### **Chart Configuration**
-
 The following table lists the configurable parameters of the helm chart and
 their default values.
 
 | Parameter                   | Description                                                                                | Default         |
 |:----------------------------|:-------------------------------------------------------------------------------------------|:----------------|
-| `image.repository`          | Container image to use                                                                     | `registry`      |
-| `image.tag`                 | Container image tag to deploy                                                                 `0.4.3`      |
+| `image.repository`          | Container image to use                                                                     | `mageshcmouli/haystack-kube-sidecar-injector`      |
+| `image.tag`                 | Container image tag to deploy                                                              |  `latest`      |
 
 Specify each parameter using the `--set key=value[,key=value]` argument to
 `helm install`.

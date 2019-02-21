@@ -5,4 +5,4 @@
 
 image:
   repository: mageshcmouli/haystack-kube-sidecar-injector
-  tag: alpha-20190216080826
+  tag: latest
