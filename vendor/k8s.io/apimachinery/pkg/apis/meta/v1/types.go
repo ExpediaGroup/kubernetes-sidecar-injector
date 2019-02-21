@@ -399,11 +399,14 @@ type ListOptions struct {
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
 // ExportOptions is the query options to the standard REST get call.
+// Deprecated. Planned for removal in 1.18.
 type ExportOptions struct {
 	TypeMeta `json:",inline"`
 	// Should this value be exported.  Export strips fields that a user can not specify.
+	// Deprecated. Planned for removal in 1.18.
 	Export bool `json:"export" protobuf:"varint,1,opt,name=export"`
 	// Should the export be exact.  Exact export maintains cluster-specific fields like 'Namespace'.
+	// Deprecated. Planned for removal in 1.18.
 	Exact bool `json:"exact" protobuf:"varint,2,opt,name=exact"`
 }
 
@@ -825,6 +828,9 @@ const (
 	// without the expected return type. The presence of this cause indicates the error may be
 	// due to an intervening proxy or the server software malfunctioning.
 	CauseTypeUnexpectedServerResponse CauseType = "UnexpectedServerResponse"
+	// FieldManagerConflict is used to report when another client claims to manage this field,
+	// It should only be returned for a request using server-side apply.
+	CauseTypeFieldManagerConflict CauseType = "FieldManagerConflict"
 )
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

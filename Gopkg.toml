@@ -27,7 +27,23 @@
 
 [[constraint]]
   branch = "master"
+  name = "github.com/ExpediaDotCom/haystack-kube-sidecar-injector"
+
+[[constraint]]
+  name = "github.com/ghodss/yaml"
+  version = "1.0.0"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/golang/glog"
+
+[[constraint]]
+  branch = "master"
   name = "k8s.io/api"
+
+[[constraint]]
+  branch = "master"
+  name = "k8s.io/apimachinery"
 
 [prune]
   go-tests = true
