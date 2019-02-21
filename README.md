@@ -93,13 +93,13 @@ To deploy and test this in [minikube](https://kubernetes.io/docs/tasks/tools/ins
 
 The command above does the following steps
 
-* Creates a key pair, certificate request and gets it signed by Kubernetes CA. Uploads the signed certificate and private key to Kubernetes as a secret using [deployment/create-server-cert.sh](deployment/create-server-cert.sh)
-* Exports Kubernetes CA file and creates a yaml file to register mutating webhook using [deployment/replace-ca-token.sh](deployment/replace-ca-token.sh)
-* Uploads a config map to be used by haystack agent as config file [deployment/haystack-agent-configmap.yaml](deployment/haystack-agent-configmap.yaml)
-* Uploads a config map with the container and volume spec to be injected as side car [deployment/sidecar-configmap.yaml](deployment/sidecar-configmap.yaml)
-* Uploads a deployment spec for `haystack-kube-sidecar-injector` [deployment/sidecar-injector-deployment.yaml](deployment/sidecar-injector-deployment.yaml). This spec uses `sidecar-configmap` from previous step and `server certificate` from first step
-* Uploads a service spec for sidecar-injector deployment [deployment/sidecar-injector-service.yaml](deployment/sidecar-injector-service.yaml)
-* Uploads a spec to register the mutating webhook that was generated in step 2 [deployment/generated-mutatingwebhook.yaml](deployment/generated-mutatingwebhook.yaml)
+* Creates a key pair, certificate request and gets it signed by Kubernetes CA. Uploads the signed certificate and private key to Kubernetes as a secret using [deployment/kubectl/create-server-cert.sh](deployment/kubectl/create-server-cert.sh)
+* Exports Kubernetes CA file and creates a yaml file to register mutating webhook using [deployment/kubectl/replace-ca-token.sh](deployment/kubectl/replace-ca-token.sh)
+* Uploads a config map to be used by haystack agent as config file [deployment/kubectl/haystack-agent-configmap.yaml](deployment/kubectl/haystack-agent-configmap.yaml)
+* Uploads a config map with the container and volume spec to be injected as side car [deployment/kubectl/sidecar-configmap.yaml](deployment/kubectl/sidecar-configmap.yaml)
+* Uploads a deployment spec for `haystack-kube-sidecar-injector` [deployment/kubectl/sidecar-injector-deployment.yaml](deployment/kubectl/sidecar-injector-deployment.yaml). This spec uses `sidecar-configmap` from previous step and `server certificate` from first step
+* Uploads a service spec for sidecar-injector deployment [deployment/kubectl/sidecar-injector-service.yaml](deployment/kubectl/sidecar-injector-service.yaml)
+* Uploads a spec to register the mutating webhook that was generated in step 2 [deployment/kubectl/generated-mutatingwebhook.yaml](deployment/kubectl/generated-mutatingwebhook.yaml)
 
 After deployment, one can check the service running by
 
