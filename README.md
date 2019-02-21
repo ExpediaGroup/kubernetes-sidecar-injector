@@ -3,15 +3,19 @@
 Table of Contents
 =================
 
-* [Build and deployment](#build-and-deployment)
-  * [Dependencies](#dependencies)
-  * [Build and run locally](#build-and-run-locally)
-  * [Build and run with docker](#build-and-run-with-docker)
-  * [Build and deploy in Kubernetes](#build-and-deploy-in-kubernetes)
-     * [Build](#build)
-     * [Deploy](#deploy)
-     * [Label the namespace](#label-the-namespace)
-     * [Test the webhook](#test-the-webhook)
+* [Table of Contents](#table-of-contents)
+  * [Build and deployment](#build-and-deployment)
+     * [Dependencies](#dependencies)
+     * [Build and run locally](#build-and-run-locally)
+     * [Build and run with docker](#build-and-run-with-docker)
+     * [Build and deploy in Kubernetes](#build-and-deploy-in-kubernetes)
+        * [Build](#build)
+        * [Deploy](#deploy)
+          * [Using Kubectl](#using-kubectl)
+          * [Using Helm](#using-helm)
+        * [Label the namespace](#label-the-namespace)
+        * [Test the webhook](#test-the-webhook)
+
 
 ## Build and deployment
 
@@ -76,23 +80,26 @@ To build and push docker container
 make release
 ```
 
-#### Deploy
+#### Deploy 
 
+We support deployment of the sidecar using helm as well as kubectl.
+
+#### Using Kubectl
 To deploy and test this in [minikube](https://kubernetes.io/docs/tasks/tools/install-minikube/)
 
 ```bash
-./deployment/deploy.sh
+./deployment/kubectl/deploy.sh
 ``` 
 
 The command above does the following steps
 
-* Creates a key pair, certificate request and gets it signed by Kubernetes CA. Uploads the signed certificate and private key to Kubernetes as a secret using [deployment/create-server-cert.sh](deployment/create-server-cert.sh)
-* Exports Kubernetes CA file and creates a yaml file to register mutating webhook using [deployment/replace-ca-token.sh](deployment/replace-ca-token.sh)
-* Uploads a config map to be used by haystack agent as config file [deployment/haystack-agent-configmap.yaml](deployment/haystack-agent-configmap.yaml)
-* Uploads a config map with the container and volume spec to be injected as side car [deployment/sidecar-configmap.yaml](deployment/sidecar-configmap.yaml)
-* Uploads a deployment spec for `haystack-kube-sidecar-injector` [deployment/sidecar-injector-deployment.yaml](deployment/sidecar-injector-deployment.yaml). This spec uses `sidecar-configmap` from previous step and `server certificate` from first step
-* Uploads a service spec for sidecar-injector deployment [deployment/sidecar-injector-service.yaml](deployment/sidecar-injector-service.yaml)
-* Uploads a spec to register the mutating webhook that was generated in step 2 [deployment/generated-mutatingwebhook.yaml](deployment/generated-mutatingwebhook.yaml)
+* Creates a key pair, certificate request and gets it signed by Kubernetes CA. Uploads the signed certificate and private key to Kubernetes as a secret using [deployment/kubectl/create-server-cert.sh](deployment/kubectl/create-server-cert.sh)
+* Exports Kubernetes CA file and creates a yaml file to register mutating webhook using [deployment/kubectl/replace-ca-token.sh](deployment/kubectl/replace-ca-token.sh)
+* Uploads a config map to be used by haystack agent as config file [deployment/kubectl/haystack-agent-configmap.yaml](deployment/kubectl/haystack-agent-configmap.yaml)
+* Uploads a config map with the container and volume spec to be injected as side car [deployment/kubectl/sidecar-configmap.yaml](deployment/kubectl/sidecar-configmap.yaml)
+* Uploads a deployment spec for `haystack-kube-sidecar-injector` [deployment/kubectl/sidecar-injector-deployment.yaml](deployment/kubectl/sidecar-injector-deployment.yaml). This spec uses `sidecar-configmap` from previous step and `server certificate` from first step
+* Uploads a service spec for sidecar-injector deployment [deployment/kubectl/sidecar-injector-service.yaml](deployment/kubectl/sidecar-injector-service.yaml)
+* Uploads a spec to register the mutating webhook that was generated in step 2 [deployment/kubectl/generated-mutatingwebhook.yaml](deployment/kubectl/generated-mutatingwebhook.yaml)
 
 After deployment, one can check the service running by
 
@@ -103,6 +110,34 @@ NAME                                                        READY     STATUS    
 haystack-kube-sidecar-injector-deployment-5b5874466-k4gnk   1/1       Running   0          1m
 
 ```
+
+#### Using Helm
+
+Follow the steps mentioned below to install the helm chart
+
+1. install the helm client based on the instructions given [here](https://docs.helm.sh/using_helm/#installing-helm)
+2. configure helm to point to kubernetes cluster
+```console
+$ minikube start
+$ helm init
+```
+3. move to the directory where the code is cloned
+4. run the following command
+```console
+$ helm install --name haystack-agent-webhook ./deployment/helm
+```
+
+The following table lists the configurable parameters of the helm chart and
+their default values.
+
+| Parameter                   | Description                                                                                | Default         |
+|:----------------------------|:-------------------------------------------------------------------------------------------|:----------------|
+| `image.repository`          | Container image to use                                                                     | `mageshcmouli/haystack-kube-sidecar-injector`      |
+| `image.tag`                 | Container image tag to deploy                                                              |  `latest`      |
+
+Specify each parameter using the `--set key=value[,key=value]` argument to
+`helm install`.
+
 #### Label the namespace
 
 Before deploying a pod to see the side car being injected, one needs to do one additional step.  
