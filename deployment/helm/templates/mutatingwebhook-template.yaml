@@ -1,0 +1,38 @@
+{{- $ca := genCA "admission-controller-ca" 3650 }}
+{{- $cn := printf "%s-%s" .Release.Name .Chart.Name }}
+{{- $altName1 := "haystack-kube-sidecar-injector-svc.default.svc" }}
+{{- $cert := genSignedCert $cn nil (list $altName1) 3650 $ca }}
+apiVersion: admissionregistration.k8s.io/v1beta1
+kind: MutatingWebhookConfiguration
+metadata:
+  name: haystack-kube-sidecar-injector-webhook
+  labels:
+    app: haystack-kube-sidecar-injector
+webhooks:
+  - name: haystack-kube-sidecar-injector.expedia.com
+    clientConfig:
+      service:
+        name: haystack-kube-sidecar-injector-svc
+        namespace: default
+        path: "/mutate"
+      caBundle: {{ b64enc $ca.Cert }}
+    failurePolicy:  Fail
+    rules:
+      - operations: [ "CREATE" ]
+        apiGroups: [""]
+        apiVersions: ["v1"]
+        resources: ["pods"]
+    namespaceSelector:
+      matchLabels:
+        haystack-sidecar-injector: enabled
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: haystack-kube-sidecar-injector-certs
+  labels:
+    app: haystack-kube-sidecar-injector-certs
+data:
+  cert.pem: {{ b64enc $cert.Cert }}
+  key.pem: {{ b64enc $cert.Key }}
