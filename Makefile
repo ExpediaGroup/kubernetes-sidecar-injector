@@ -17,10 +17,10 @@ imports:
 clean:
 	go clean
 
-ensure: clean vet lint
+ensure:
 	dep ensure
 
-build: ensure
+build: ensure clean vet lint
 	go build
 
 docker: ensure
