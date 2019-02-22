@@ -1,8 +1,6 @@
 SHELL := /bin/bash
-TAG := $(shell date "+alpha-%Y%m%d%H%M%S")
 CONTAINER_NAME=expediadotcom/haystack-kube-sidecar-injector
-CONTAINER_VERSION=$(CONTAINER_NAME):$(TAG)
-CONTAINER_LATEST=$(CONTAINER_NAME):latest
+
 SRC=$(shell find . -type f -name '*.go' -not -path "./vendor/*")
 
 lint:
@@ -23,12 +21,8 @@ ensure:
 build: ensure clean vet lint
 	go build
 
-docker: ensure clean vet lint
+release: ensure clean vet lint
 	CGO_ENABLED=0 GOOS=linux go build
-	docker build --no-cache -t ${CONTAINER_VERSION} -t ${CONTAINER_LATEST} .
+	docker build --no-cache -t ${CONTAINER_NAME} .
 	rm haystack-kube-sidecar-injector
-
-release: docker
-	docker push ${CONTAINER_VERSION}
-	docker push ${CONTAINER_LATEST}
 
