@@ -1,5 +1,5 @@
 name: haystack-kube-sidecar-injector
-home: https://github.com/mchandramouli/haystack-kube-sidecar-injector
+home: https://github.com/expediadotcom/haystack-kube-sidecar-injector
 version: 0.1
 appVersion: 0.1
 keywords:
@@ -8,7 +8,7 @@ keywords:
 description:
 apiVersion:
 sources:
-- https://github.com/mchandramouli/haystack-kube-sidecar-injector
+- https://github.com/expediadotcom/haystack-kube-sidecar-injector
 maintainers:
 - name: Ayan Sen
   email: aysen@expedia.com

@@ -17,13 +17,13 @@ imports:
 clean:
 	go clean
 
-ensure: clean vet lint
+ensure:
 	dep ensure
 
-build: ensure
+build: ensure clean vet lint
 	go build
 
-docker: ensure
+docker: ensure clean vet lint
 	CGO_ENABLED=0 GOOS=linux go build
 	docker build --no-cache -t ${CONTAINER_VERSION} -t ${CONTAINER_LATEST} .
 	rm haystack-kube-sidecar-injector
