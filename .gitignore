@@ -6,5 +6,5 @@
 haystack-kube-sidecar-injector
 generated-*.yaml
 
-/Gopkg.lock
+Gopkg.lock
 /vendor/
