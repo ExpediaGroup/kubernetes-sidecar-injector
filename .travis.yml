@@ -25,7 +25,7 @@ install:
 
 deploy:
   provider: script
-  script: bash docker_push.sh
+  script: chmod +x $TRAVIS_BUILD_DIR/docker_push.sh && $TRAVIS_BUILD_DIR/docker_push.sh
   on:
     branch: master
     
