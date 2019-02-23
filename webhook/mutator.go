@@ -159,10 +159,10 @@ func createPatch(pod *corev1.Pod, inSidecarConfig *SideCar, annotations map[stri
 
 	// copies all annotations in the pod with sideCarNameSpace as env
 	// in the injected sidecar containers
-	envVariables := getEnvToIjnect(pod.Annotations)
-	for key, value := range envVariables {
-		for _, c := range sideCar.Containers {
-			c.Env = append(c.Env, corev1.EnvVar{Name: key, Value: value})
+	envVariables := getEnvToInject(pod.Annotations)
+	if len(envVariables) > 0 {
+		for i := range sideCar.Containers {
+			sideCar.Containers[i].Env = append(sideCar.Containers[i].Env, envVariables...)
 		}
 	}
 
@@ -283,10 +283,8 @@ func makeCopy(src *SideCar) (*SideCar, error) {
 	return &dst, nil
 }
 
-func getEnvToIjnect(annotations map[string]string) map[string]string {
-	var env map[string]string
-	env = make(map[string]string)
-
+func getEnvToInject(annotations map[string]string) []corev1.EnvVar {
+	var env []corev1.EnvVar
 	sz := len(sideCarNameSpace)
 
 	for key, value := range annotations {
@@ -294,8 +292,10 @@ func getEnvToIjnect(annotations map[string]string) map[string]string {
 			parts := strings.Split(key, "/")
 
 			if parts[1] != injectAnnotation && parts[1] != statusAnnotation {
-				env[parts[1]] = value
+				env = append(env, corev1.EnvVar{Name: parts[1], Value: value})
 			}
 		}
 	}
+
+	return env
 }

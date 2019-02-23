@@ -10,6 +10,7 @@ spec:
     metadata:
       annotations:
         haystack-kube-sidecar-injector.expedia.com/inject: "yes"
+        haystack-kube-sidecar-injector.expedia.com/some-env-variable: "foo-bar"
       labels:
         app: echo-server
     spec:
