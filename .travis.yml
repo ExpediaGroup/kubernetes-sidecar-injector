@@ -25,7 +25,7 @@ install:
 
 deploy:
   provider: script
-  script: chmod +x ./docker_push.sh && ./docker_push.sh
+  script: bash docker-push.sh
   on:
     branch: master
     
