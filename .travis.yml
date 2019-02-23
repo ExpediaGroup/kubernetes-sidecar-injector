@@ -27,6 +27,8 @@ install:
 deploy:
   provider: script
   script: bash docker-push.sh
+  on:
+    all_branches: true
 
 notifications:
   email:
