@@ -3,6 +3,7 @@ package webhook
 import (
 	"encoding/json"
 	"fmt"
+	"gopkg.in/yaml.v2"
 	"strings"
 
 	"github.com/golang/glog"
@@ -25,9 +26,12 @@ var (
 )
 
 const (
-	sideCarInjectionAnnotation       = "haystack-kube-sidecar-injector.expedia.com/inject"
-	sideCarInjectionStatusAnnotation = "haystack-kube-sidecar-injector.expedia.com/status"
-	sideCarInjectedValue             = "injected"
+	sideCarNameSpace			     = "haystack-kube-sidecar-injector.expedia.com/"
+	injectAnnotation                 = "inject"
+	statusAnnotation                 = "status"
+	sideCarInjectionAnnotation       = sideCarNameSpace + injectAnnotation
+	sideCarInjectionStatusAnnotation = sideCarNameSpace + statusAnnotation
+	injectedValue                    = "injected"
 )
 
 type patchOperation struct {
@@ -90,7 +94,7 @@ func mutate(ar *v1beta1.AdmissionReview, sideCar *SideCar) *v1beta1.AdmissionRes
 		}
 	}
 
-	annotations := map[string]string{sideCarInjectionStatusAnnotation: sideCarInjectedValue}
+	annotations := map[string]string{sideCarInjectionStatusAnnotation: injectedValue}
 	patchBytes, err := createPatch(&pod, sideCar, annotations)
 	if err != nil {
 		return errorResponse(req.UID, err)
@@ -136,7 +140,7 @@ func shouldMutate(ignoredList []string, metadata *metav1.ObjectMeta) bool {
 	}
 
 	status := annotations[sideCarInjectionStatusAnnotation]
-	if strings.ToLower(status) != sideCarInjectedValue {
+	if strings.ToLower(status) != injectedValue {
 		switch strings.ToLower(annotations[sideCarInjectionAnnotation]) {
 		case "y", "yes", "true", "on":
 			required = true
@@ -147,12 +151,25 @@ func shouldMutate(ignoredList []string, metadata *metav1.ObjectMeta) bool {
 	return required
 }
 
-func createPatch(pod *corev1.Pod, sidecarConfig *SideCar, annotations map[string]string) ([]byte, error) {
-	var patch []patchOperation
+func createPatch(pod *corev1.Pod, inSidecarConfig *SideCar, annotations map[string]string) ([]byte, error) {
+	sideCar, err := makeCopy(inSidecarConfig)
+	if err != nil {
+		return nil, err
+	}
 
-	patch = append(patch, addContainer(pod.Spec.Containers, sidecarConfig.Containers, "/spec/containers")...)
-	patch = append(patch, addVolume(pod.Spec.Volumes, sidecarConfig.Volumes, "/spec/volumes")...)
-	patch = append(patch, addImagePullSecrets(pod.Spec.ImagePullSecrets, sidecarConfig.ImagePullSecrets, "/spec/imagePullSecrets")...)
+	// copies all annotations in the pod with sideCarNameSpace as env
+	// in the injected sidecar containers
+	envVariables := getEnvToIjnect(pod.Annotations)
+	for key, value := range envVariables {
+		for _, c := range sideCar.Containers {
+			c.Env = append(c.Env, corev1.EnvVar{Name: key, Value: value})
+		}
+	}
+
+	var patch []patchOperation
+	patch = append(patch, addContainer(pod.Spec.Containers, sideCar.Containers, "/spec/containers")...)
+	patch = append(patch, addVolume(pod.Spec.Volumes, sideCar.Volumes, "/spec/volumes")...)
+	patch = append(patch, addImagePullSecrets(pod.Spec.ImagePullSecrets, sideCar.ImagePullSecrets, "/spec/imagePullSecrets")...)
 
 	patch = append(patch, updateAnnotation(pod.Annotations, annotations)...)
 
@@ -249,4 +266,36 @@ func updateAnnotation(target map[string]string, added map[string]string) []patch
 		}
 	}
 	return patch
+}
+
+func makeCopy(src *SideCar) (*SideCar, error) {
+	data, err := yaml.Marshal(src)
+	if err != nil {
+		return nil, err
+	}
+
+	var dst SideCar
+	err = yaml.Unmarshal(data, &dst)
+	if err != nil {
+		return nil, err
+	}
+
+	return &dst, nil
+}
+
+func getEnvToIjnect(annotations map[string]string) map[string]string {
+	var env map[string]string
+	env = make(map[string]string)
+
+	sz := len(sideCarNameSpace)
+
+	for key, value := range annotations {
+		if strings.HasPrefix(key, sideCarNameSpace) && len(key) > sz {
+			parts := strings.Split(key, "/")
+
+			if parts[1] != injectAnnotation && parts[1] != statusAnnotation {
+				env[parts[1]] = value
+			}
+		}
+	}
 }
