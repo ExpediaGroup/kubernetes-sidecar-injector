@@ -4,6 +4,9 @@
 Kubernetes Mutating Webhook
 ===========
 
-## Contribute
+## Developing
 
-If one is interested in contributing or making changes, please read [developer documentation](DEVELOP.md) on how to build and test this codebase
+If one is interested in contributing to this codebase, please read the [developer documentation](DEVELOP.md) on how to build and test this codebase.
+
+## Using this webhook
+
