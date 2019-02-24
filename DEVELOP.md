@@ -1,23 +1,16 @@
 [![Build Status](https://travis-ci.org/ExpediaDotCom/haystack-kube-sidecar-injector.svg?branch=master)](https://travis-ci.org/ExpediaDotCom/haystack-kube-sidecar-injector)
 [![License](https://img.shields.io/badge/license-Apache%20License%202.0-blue.svg)](https://github.com/ExpediaDotCom/haystack/blob/master/LICENSE)
 
-Table of Contents
-=================
+## Contributing
 
-* [Table of Contents](#table-of-contents)
-  * [Build and deployment](#build-and-deployment)
-     * [Dependencies](#dependencies)
-     * [Build and run locally](#build-and-run-locally)
-     * [Build and run with docker](#build-and-run-with-docker)
-     * [Build and deploy in Kubernetes](#build-and-deploy-in-kubernetes)
-        * [Build](#build)
-        * [Deploy using Kubectl](#deploy-using-kubectl)
-        * [Deploy using Helm](#deploy-using-helm)
-        * [Label the namespace](#label-the-namespace)
-        * [Test the webhook](#test-the-webhook)
+Code contributions are always welcome.
 
+* Open an issue in the repo with defect/enhancements
+* We can also be reached @ https://gitter.im/expedia-haystack/Lobby
+* Fork, make the changes, build and test it locally
+* Issue a PR - watch the PR build in [travis-ci](https://travis-ci.org/ExpediaDotCom/haystack-kube-sidecar-injector)
+* Once merged to master, travis-ci will build and release the container with latest tag
 
-# Build and deployment
 
 ## Dependencies
 
@@ -73,30 +66,17 @@ curl -kvX POST --header "Content-Type: application/json" -d @sample/admission-re
 
 ## Build and deploy in Kubernetes
 
-### Build
-
-To build and push docker container
-
-```bash
-make release
-```
-
 ### Deploy using Kubectl
+
 To deploy and test this in [minikube](https://kubernetes.io/docs/tasks/tools/install-minikube/)
+* build docker container locally with the fixes
+* update `deployment/kubectl/sidecar-injector-deployment.yaml` file to use the local docker image
+* run the command
 
 ```bash
 ./deployment/kubectl/deploy.sh
 ``` 
-
-The command above does the following steps
-
-* Creates a key pair, certificate request and gets it signed by Kubernetes CA. Uploads the signed certificate and private key to Kubernetes as a secret using [deployment/kubectl/create-server-cert.sh](deployment/kubectl/create-server-cert.sh)
-* Exports Kubernetes CA file and creates a yaml file to register mutating webhook using [deployment/kubectl/replace-ca-token.sh](deployment/kubectl/replace-ca-token.sh)
-* Uploads a config map to be used by haystack agent as config file [deployment/kubectl/haystack-agent-configmap.yaml](deployment/kubectl/haystack-agent-configmap.yaml)
-* Uploads a config map with the container and volume spec to be injected as side car [deployment/kubectl/sidecar-configmap.yaml](deployment/kubectl/sidecar-configmap.yaml)
-* Uploads a deployment spec for `haystack-kube-sidecar-injector` [deployment/kubectl/sidecar-injector-deployment.yaml](deployment/kubectl/sidecar-injector-deployment.yaml). This spec uses `sidecar-configmap` from previous step and `server certificate` from first step
-* Uploads a service spec for sidecar-injector deployment [deployment/kubectl/sidecar-injector-service.yaml](deployment/kubectl/sidecar-injector-service.yaml)
-* Uploads a spec to register the mutating webhook that was generated in step 2 [deployment/kubectl/generated-mutatingwebhook.yaml](deployment/kubectl/generated-mutatingwebhook.yaml)
+(To understand the command above - check the [README](README.md) file)
 
 After deployment, one can check the service running by
 
@@ -107,33 +87,6 @@ NAME                                                        READY     STATUS    
 haystack-kube-sidecar-injector-deployment-5b5874466-k4gnk   1/1       Running   0          1m
 
 ```
-
-### Deploy using Helm
-
-Follow the steps mentioned below to install the helm chart
-
-1. install the helm client based on the instructions given [here](https://docs.helm.sh/using_helm/#installing-helm)
-2. configure helm to point to kubernetes cluster
-```console
-$ minikube start
-$ helm init
-```
-3. move to the directory where the code is cloned
-4. run the following command
-```console
-$ helm install --name haystack-agent-webhook ./deployment/helm
-```
-
-The following table lists the configurable parameters of the helm chart and
-their default values.
-
-| Parameter                   | Description                                                                                | Default         |
-|:----------------------------|:-------------------------------------------------------------------------------------------|:----------------|
-| `image.repository`          | Container image to use                                                                     | `expediadotcom/haystack-kube-sidecar-injector`      |
-| `image.tag`                 | Container image tag to deploy                                                              |  `latest`      |
-
-Specify each parameter using the `--set key=value[,key=value]` argument to
-`helm install`.
 
 ### Label the namespace
 
