@@ -26,7 +26,7 @@ var (
 )
 
 const (
-	sideCarNameSpace			     = "haystack-kube-sidecar-injector.expedia.com/"
+	sideCarNameSpace                 = "haystack-kube-sidecar-injector.expedia.com/"
 	injectAnnotation                 = "inject"
 	statusAnnotation                 = "status"
 	sideCarInjectionAnnotation       = sideCarNameSpace + injectAnnotation
