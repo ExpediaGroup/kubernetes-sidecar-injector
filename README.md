@@ -1,170 +1,79 @@
 [![Build Status](https://travis-ci.org/ExpediaDotCom/haystack-kube-sidecar-injector.svg?branch=master)](https://travis-ci.org/ExpediaDotCom/haystack-kube-sidecar-injector)
 [![License](https://img.shields.io/badge/license-Apache%20License%202.0-blue.svg)](https://github.com/ExpediaDotCom/haystack/blob/master/LICENSE)
 
-Table of Contents
-=================
+Kubernetes Mutating Webhook
+===========
 
-* [Table of Contents](#table-of-contents)
-  * [Build and deployment](#build-and-deployment)
-     * [Dependencies](#dependencies)
-     * [Build and run locally](#build-and-run-locally)
-     * [Build and run with docker](#build-and-run-with-docker)
-     * [Build and deploy in Kubernetes](#build-and-deploy-in-kubernetes)
-        * [Build](#build)
-        * [Deploy using Kubectl](#deploy-using-kubectl)
-        * [Deploy using Helm](#deploy-using-helm)
-        * [Label the namespace](#label-the-namespace)
-        * [Test the webhook](#test-the-webhook)
+This [mutating webhook](https://kubernetes.io/docs/reference/access-authn-authz/admission-controllers/#mutatingadmissionwebhook) was developed to inject [Haystack](http://expediadotcom.github.io/haystack/)'s agent as a sidecar to a Kubernetes pod so applications can ship trace data to Haystack server. 
 
+Though this was primarily written to inject [haystack-agent](https://github.com/ExpediaDotCom/haystack-agent) as a sidecar, __one can use this to inject any container as a sidecar in a pod__.
 
-# Build and deployment
+## Developing
 
-## Dependencies
+If one is interested in contributing to this codebase, please read the [developer documentation](DEVELOP.md) on how to build and test this codebase.
 
-* Install `dep` and `goimports`
+## Using this webhook
 
-```bash
-go get -u github.com/golang/dep/cmd/dep
-go get golang.org/x/tools/cmd/goimports
-go get -u golang.org/x/lint/golint
-```
+We have provided two ways to deploy this webhook. Using [Helm](https://helm.sh/) and using [kubectl](https://kubernetes.io/docs/reference/kubectl/overview/). Deployment files are in `deployment/helm` and `deployment/kubectl` respectively. 
 
-* Ensure [GOROOT, GOPATH and GOBIN](https://www.programming-books.io/essential/go/d6da4b8481f94757bae43be1fdfa9e73-gopath-goroot-gobin) environment variables are set correctly.
+### How to enable sidecar injection using this webhook
 
-## Build and run locally
+1. One can simply deploy this mutating webhook by cloning this repository and running the following command (needs kubectl installed and configured to point to the kubernets cluster or minikube)
 
-* Build
+    ```bash
+    ./deployment/kubectl/deploy.sh
+    ```
+    
+    or using helm
+    
+    ```bash
+    helm init
+    helm install --name haystack-agent-webhook ./deployment/helm
+    ```
+    
+2. Apply the label `haystack-sidecar-injector=enabled` in the namespaces where the sidecar injection should be considered. [This sample](sample/namespace-label.yaml) file applies the label mentioned to _default_ namespace
 
-```bash
-make build
-```
+3. Add the annotation `haystack-kube-sidecar-injector.expedia.com/inject: yes` in pod spec to inject the side car. [This sample spec](sample/echo-server.yaml#L12) shows the annotation added to a pod spec. 
 
-* Run
+### Kubectl deployment files
 
-```bash
-./haystack-kube-sidecar-injector -port=8443 -certFile=sample/certs/cert.pem  -keyFile=sample/certs/key.pem -sideCar=sample/sidecar.yaml -logtostderr
-```
+Lets go over the files in the __deployment/kubectl__ folder.
 
-* Send a sample request
+1.  __sidecar-configmap.yaml__:  This file contains two _configmap_ entries.  First one, _haystack-sidecar-configmap_ contains the haystack-agent sidecar container to be injected and the second one, _haystack-agent-conf-configmap_ contains a configuration file that is used by haystack-agent sidecar. 
 
-```bash
-curl -kvX POST --header "Content-Type: application/json" -d @sample/admission-request.json https://localhost:8443/mutate
-```
+    _Though this file carries haystack-agent, one can replace this with_ __any sidecar to be injected__. 
 
-## Build and run with docker
+2. __sidecar-injector-deployment.yaml__: This file deploys _haystack-kube-sidecar-injector_ pod and _haystack-kube-sidecar-injector-svc_ service. This is the mutating webhook admission controller service. This is invoked by kebernetes while creating a new pod with the pod spec that is being created. That allows this webhook to inspect and make a decision on whether to inject the sidecar or not. This webhook checks for two conditions to determine whether to inject a sidecar or not
+    1. __Namespace check__:  Sidecar injection will be attempted _only_ if the the pod is being created in a namespace with the label `haystack-sidecar-injector=enabled` __and__  the namespace is NOT `kube-system` or `kube-public`
+    2. __Annotation check__: Sidecar inkection will be attempted _only_ if the pod being created carries an annotation `haystack-kube-sidecar-injector.expedia.com/inject: yes`
 
-* Build
+3. __create-server-cert.sh__: Mutating webhook admission controllers need to listen on `https (TLS)`. This script generates a key, a certificate request and gets that request signed by Kubernetes CA. i.e., produces a signed certificate and deploys it as a kubernets secret to be used by the service defined in #2
 
-```bash
-make docker
-```
+4. __mutatingwebhook-template.yaml__: This file registers the mutating webhook admission controller. This spec carries the CA file that will validate the server certificate used by the service. This file is a template and the `caBundle` field in it is populated by the script `replace-ca-token.sh` file
 
-* Run
+5. __deploy.sh__: This is a simple bash script that deploys the webhook by executing the scripts / deployment specifications mentioned above.  
 
-```bash
-docker run -d --name injector -p 8443:443 --mount type=bind,src=/Users/mchandramouli/src/go/src/github.com/expediadotcom/haystack-kube-sidecar-injector/sample,dst=/etc/mutator expediadotcom/haystack-kube-sidecar-injector:latest -logtostderr
-```
+### Helm deployment files
 
-* Send a sample request
+Files in __deployment/helm/templates__ are the same as the files in kubectl folder and provide the same functionality.
 
-```bash
-curl -kvX POST --header "Content-Type: application/json" -d @sample/admission-request.json https://localhost:8443/mutate
-```
+### Addendum
 
-## Build and deploy in Kubernetes
+#### Injecting env variables in the sidecar
 
-### Build
+At times one may have to pass additional information to the sidecar from the pod spec. For example, a pod specific `api-key` to be used by the sidecar. To allow that, this webhook looks for special annotations with prefix `haystack-kube-sidecar-injector.expedia.com` in the pod spec and adds the annotation key-value as environment variables to the sidecar. 
 
-To build and push docker container
+For example, this [sample pod specification](sample/echo-server.yaml#L13) has the following annotation 
 
-```bash
-make release
-```
+  ```yaml
+  haystack-kube-sidecar-injector.expedia.com/some-api-key: "6feab492-fc9b-4c38-b50d-3791718c8203"
+  ```
 
-### Deploy using Kubectl
-To deploy and test this in [minikube](https://kubernetes.io/docs/tasks/tools/install-minikube/)
+and this will cause this webhook to inject
 
-```bash
-./deployment/kubectl/deploy.sh
-``` 
+  ```yaml
+  some-api-key: "6feab492-fc9b-4c38-b50d-3791718c8203"
+  ```
 
-The command above does the following steps
-
-* Creates a key pair, certificate request and gets it signed by Kubernetes CA. Uploads the signed certificate and private key to Kubernetes as a secret using [deployment/kubectl/create-server-cert.sh](deployment/kubectl/create-server-cert.sh)
-* Exports Kubernetes CA file and creates a yaml file to register mutating webhook using [deployment/kubectl/replace-ca-token.sh](deployment/kubectl/replace-ca-token.sh)
-* Uploads a config map to be used by haystack agent as config file [deployment/kubectl/haystack-agent-configmap.yaml](deployment/kubectl/haystack-agent-configmap.yaml)
-* Uploads a config map with the container and volume spec to be injected as side car [deployment/kubectl/sidecar-configmap.yaml](deployment/kubectl/sidecar-configmap.yaml)
-* Uploads a deployment spec for `haystack-kube-sidecar-injector` [deployment/kubectl/sidecar-injector-deployment.yaml](deployment/kubectl/sidecar-injector-deployment.yaml). This spec uses `sidecar-configmap` from previous step and `server certificate` from first step
-* Uploads a service spec for sidecar-injector deployment [deployment/kubectl/sidecar-injector-service.yaml](deployment/kubectl/sidecar-injector-service.yaml)
-* Uploads a spec to register the mutating webhook that was generated in step 2 [deployment/kubectl/generated-mutatingwebhook.yaml](deployment/kubectl/generated-mutatingwebhook.yaml)
-
-After deployment, one can check the service running by
-
-```bash
-kubectl get pod
-
-NAME                                                        READY     STATUS    RESTARTS   AGE
-haystack-kube-sidecar-injector-deployment-5b5874466-k4gnk   1/1       Running   0          1m
-
-```
-
-### Deploy using Helm
-
-Follow the steps mentioned below to install the helm chart
-
-1. install the helm client based on the instructions given [here](https://docs.helm.sh/using_helm/#installing-helm)
-2. configure helm to point to kubernetes cluster
-```console
-$ minikube start
-$ helm init
-```
-3. move to the directory where the code is cloned
-4. run the following command
-```console
-$ helm install --name haystack-agent-webhook ./deployment/helm
-```
-
-The following table lists the configurable parameters of the helm chart and
-their default values.
-
-| Parameter                   | Description                                                                                | Default         |
-|:----------------------------|:-------------------------------------------------------------------------------------------|:----------------|
-| `image.repository`          | Container image to use                                                                     | `expediadotcom/haystack-kube-sidecar-injector`      |
-| `image.tag`                 | Container image tag to deploy                                                              |  `latest`      |
-
-Specify each parameter using the `--set key=value[,key=value]` argument to
-`helm install`.
-
-### Label the namespace
-
-Before deploying a pod to see the side car being injected, one needs to do one additional step.  
-
-[Registration spec of this mutating webhook](deployment/mutatingwebhook-template.yaml#L22) specifies that this webhook be called only for pods deployed in namespaces with a label `haystack-sidecar-injector: enabled`
-
-Following spec applies this label to `default` namespace
-
-```bash
-kubectl apply -f sample/namespace-label.yaml
-```
-
-### Test the webhook
-
-One can run the following command to deploy a sample `echo-server`. Note, this [deployment spec carries an annotation](sample/echo-server.yaml#L12) `haystack-kube-sidecar-injector.expedia.com/inject: "yes"` that triggers injection of the sidecar.
-
-```bash
-kubectl apply -f sample/echo-server.yaml
-```
-
-One can then run the following command to confirm the sidecar has been injected
-
-```bash
-kubectl get pod
-
-NAME                                                        READY     STATUS             RESTARTS   AGE
-echo-server-deployment-849b87649d-9x95k                     2/2       Running            0          4m
-haystack-kube-sidecar-injector-deployment-cc4648b7f-bdk2v   1/1       Running            0          6m
-```
-
-Note the **2 containers** in the echo-server pod instead of one. 
-
+as an environment variable in the sidecar.
 

@@ -14,6 +14,7 @@ env:
     - BRANCH=${TRAVIS_BRANCH}
     - TAG=${TRAVIS_TAG}
     - SHA=${TRAVIS_COMMIT}
+    - PULL_REQUEST=${TRAVIS_PULL_REQUEST}
 
 before_install:
   - go get -u github.com/golang/dep/cmd/dep
@@ -27,8 +28,8 @@ deploy:
   provider: script
   script: bash docker-push.sh
   on:
-    branch: master
-    
+    all_branches: true
+
 notifications:
   email:
     - haystack-notifications@expedia.com

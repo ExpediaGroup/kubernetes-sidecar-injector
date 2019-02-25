@@ -43,16 +43,12 @@ ${BASEDIR}/create-server-cert.sh -p haystack-kube-sidecar-injector-certs -n defa
 cat ${BASEDIR}/mutatingwebhook-template.yaml | ${BASEDIR}/replace-ca-token.sh > ${BASEDIR}/generated-mutatingwebhook.yaml
 
 # deploy the config map used by the injected sidecar
-file-check-and-apply ${BASEDIR}/haystack-agent-configmap.yaml
-
 # deploy the config map with the side care spec used by webhook
 file-check-and-apply ${BASEDIR}/sidecar-configmap.yaml
 
 # deploy the sidecar injector webhook
-file-check-and-apply ${BASEDIR}/sidecar-injector-deployment.yaml
-
 # deploy the sidecar injector service
-file-check-and-apply ${BASEDIR}/sidecar-injector-service.yaml
+file-check-and-apply ${BASEDIR}/sidecar-injector-deployment.yaml
 
 # deploy the sidecar injecting webhook
 file-check-and-apply ${BASEDIR}/generated-mutatingwebhook.yaml
