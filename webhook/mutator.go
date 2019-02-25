@@ -288,7 +288,7 @@ func getEnvToInject(annotations map[string]string) []corev1.EnvVar {
 	sz := len(sideCarNameSpace)
 
 	for key, value := range annotations {
-		if strings.HasPrefix(key, sideCarNameSpace) && len(key) > sz {
+		if len(key) > sz && strings.HasPrefix(key, sideCarNameSpace) {
 			parts := strings.Split(key, "/")
 
 			if parts[1] != injectAnnotation && parts[1] != statusAnnotation {
