@@ -57,5 +57,23 @@ Lets go over the files in the __deployment/kubectl__ folder.
 
 Files in __deployment/helm/templates__ are the same as the files in kubectl folder and provide the same functionality.
 
+### Addendum
 
+#### Injecting env variables in the sidecar
+
+At times one may have to pass additional information to the sidecar from the pod spec. For example, a pod specific `api-key` to be used by the sidecar. To allow that, this webhook looks for special annotations with prefix `haystack-kube-sidecar-injector.expedia.com` in the pod spec and adds the annotation key-value as environment variables to the sidecar. 
+
+For example, this [sample pod specification](sample/echo-server.yaml#L13) has the following annotation 
+
+  ```yaml
+  haystack-kube-sidecar-injector.expedia.com/some-api-key: "6feab492-fc9b-4c38-b50d-3791718c8203"
+  ```
+
+and this will cause this webhook to inject
+
+  ```yaml
+  some-api-key: "6feab492-fc9b-4c38-b50d-3791718c8203"
+  ```
+
+as an environment variable in the sidecar.
 
