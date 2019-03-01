@@ -1,18 +1,21 @@
-containers:
+sidecars:
   - name: haystack-agent
-    image: expediadotcom/haystack-agent
-    imagePullPolicy: IfNotPresent
-    args:
-      - --config-provider
-      - file
-      - --file-path
-      - /app/haystack/agent.conf
-    ports:
-      - containerPort: 34000
-    volumeMounts:
-      - name: agent-conf
-        mountPath: /app/haystack
-volumes:
-  - name: agent-conf
-    configMap:
-      name: haystack-agent-conf-configmap
+    sidecar:
+      containers:
+        - name: haystack-agent
+          image: expediadotcom/haystack-agent
+          imagePullPolicy: IfNotPresent
+          args:
+            - --config-provider
+            - file
+            - --file-path
+            - /app/haystack/agent.conf
+          ports:
+            - containerPort: 34000
+          volumeMounts:
+            - name: agent-conf
+              mountPath: /app/haystack
+      volumes:
+        - name: agent-conf
+          configMap:
+            name: haystack-agent-conf-configmap

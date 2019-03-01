@@ -33,7 +33,7 @@ We have provided two ways to deploy this webhook. Using [Helm](https://helm.sh/)
     
 2. Apply the label `haystack-sidecar-injector=enabled` in the namespaces where the sidecar injection should be considered. [This sample](sample/namespace-label.yaml) file applies the label mentioned to _default_ namespace
 
-3. Add the annotation `haystack-kube-sidecar-injector.expedia.com/inject: yes` in pod spec to inject the side car. [This sample spec](sample/echo-server.yaml#L12) shows the annotation added to a pod spec. 
+3. Add the annotation `sidecar-injector.expedia.com/inject: yes` in pod spec to inject the side car. [This sample spec](sample/echo-server.yaml#L12) shows the annotation added to a pod spec. 
 
 ### Kubectl deployment files
 
@@ -45,7 +45,7 @@ Lets go over the files in the __deployment/kubectl__ folder.
 
 2. __sidecar-injector-deployment.yaml__: This file deploys _haystack-kube-sidecar-injector_ pod and _haystack-kube-sidecar-injector-svc_ service. This is the mutating webhook admission controller service. This is invoked by kebernetes while creating a new pod with the pod spec that is being created. That allows this webhook to inspect and make a decision on whether to inject the sidecar or not. This webhook checks for two conditions to determine whether to inject a sidecar or not
     1. __Namespace check__:  Sidecar injection will be attempted _only_ if the the pod is being created in a namespace with the label `haystack-sidecar-injector=enabled` __and__  the namespace is NOT `kube-system` or `kube-public`
-    2. __Annotation check__: Sidecar inkection will be attempted _only_ if the pod being created carries an annotation `haystack-kube-sidecar-injector.expedia.com/inject: yes`
+    2. __Annotation check__: Sidecar inkection will be attempted _only_ if the pod being created carries an annotation `sidecar-injector.expedia.com/inject: yes`
 
 3. __create-server-cert.sh__: Mutating webhook admission controllers need to listen on `https (TLS)`. This script generates a key, a certificate request and gets that request signed by Kubernetes CA. i.e., produces a signed certificate and deploys it as a kubernets secret to be used by the service defined in #2
 
@@ -61,12 +61,12 @@ Files in __deployment/helm/templates__ are the same as the files in kubectl fold
 
 #### Injecting env variables in the sidecar
 
-At times one may have to pass additional information to the sidecar from the pod spec. For example, a pod specific `api-key` to be used by the sidecar. To allow that, this webhook looks for special annotations with prefix `haystack-kube-sidecar-injector.expedia.com` in the pod spec and adds the annotation key-value as environment variables to the sidecar. 
+At times one may have to pass additional information to the sidecar from the pod spec. For example, a pod specific `api-key` to be used by the sidecar. To allow that, this webhook looks for special annotations with prefix `sidecar-injector.expedia.com` in the pod spec and adds the annotation key-value as environment variables to the sidecar. 
 
 For example, this [sample pod specification](sample/echo-server.yaml#L13) has the following annotation 
 
   ```yaml
-  haystack-kube-sidecar-injector.expedia.com/some-api-key: "6feab492-fc9b-4c38-b50d-3791718c8203"
+  sidecar-injector.expedia.com/some-api-key: "6feab492-fc9b-4c38-b50d-3791718c8203"
   ```
 
 and this will cause this webhook to inject

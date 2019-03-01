@@ -2,8 +2,8 @@ package webhook
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
-	"gopkg.in/yaml.v2"
 	"strings"
 
 	"github.com/golang/glog"
@@ -26,7 +26,7 @@ var (
 )
 
 const (
-	sideCarNameSpace                 = "haystack-kube-sidecar-injector.expedia.com/"
+	sideCarNameSpace                 = "sidecar-injector.expedia.com/"
 	injectAnnotation                 = "inject"
 	statusAnnotation                 = "status"
 	sideCarInjectionAnnotation       = sideCarNameSpace + injectAnnotation
@@ -47,7 +47,7 @@ type SideCar struct {
 }
 
 type Mutator struct {
-	SideCar *SideCar
+	SideCars map[string]*SideCar
 }
 
 func (mutator Mutator) Mutate(req []byte) ([]byte, error) {
@@ -58,7 +58,7 @@ func (mutator Mutator) Mutate(req []byte) ([]byte, error) {
 	_, _, err := deserializer.Decode(req, nil, &admissionReviewReq)
 
 	if err == nil && admissionReviewReq.Request != nil {
-		admissionResponse = mutate(&admissionReviewReq, mutator.SideCar)
+		admissionResponse = mutate(&admissionReviewReq, mutator.SideCars)
 	} else {
 		message := "Failed to decode request"
 
@@ -77,7 +77,7 @@ func (mutator Mutator) Mutate(req []byte) ([]byte, error) {
 	return json.Marshal(admissionReviewResp)
 }
 
-func mutate(ar *v1beta1.AdmissionReview, sideCar *SideCar) *v1beta1.AdmissionResponse {
+func mutate(ar *v1beta1.AdmissionReview, sideCars map[string]*SideCar) *v1beta1.AdmissionResponse {
 	req := ar.Request
 
 	glog.Infof("AdmissionReview for Kind=%v, Namespace=%v Name=%v UID=%v patchOperation=%v UserInfo=%v",
@@ -88,25 +88,25 @@ func mutate(ar *v1beta1.AdmissionReview, sideCar *SideCar) *v1beta1.AdmissionRes
 		return errorResponse(ar.Request.UID, err)
 	}
 
-	if !shouldMutate(systemNameSpaces, &pod.ObjectMeta) {
+	if sideCarNames, ok := shouldMutate(systemNameSpaces, &pod.ObjectMeta); ok {
+		annotations := map[string]string{sideCarInjectionStatusAnnotation: injectedValue}
+		patchBytes, err := createPatch(&pod, sideCarNames, sideCars, annotations)
+		if err != nil {
+			return errorResponse(req.UID, err)
+		}
+
+		glog.Infof("AdmissionResponse: Patch: %v\n", string(patchBytes))
+		pt := v1beta1.PatchTypeJSONPatch
 		return &v1beta1.AdmissionResponse{
-			Allowed: true,
+			UID:       req.UID,
+			Allowed:   true,
+			Patch:     patchBytes,
+			PatchType: &pt,
 		}
 	}
 
-	annotations := map[string]string{sideCarInjectionStatusAnnotation: injectedValue}
-	patchBytes, err := createPatch(&pod, sideCar, annotations)
-	if err != nil {
-		return errorResponse(req.UID, err)
-	}
-
-	glog.Infof("AdmissionResponse: Patch: %v\n", string(patchBytes))
-	pt := v1beta1.PatchTypeJSONPatch
 	return &v1beta1.AdmissionResponse{
-		UID:       req.UID,
-		Allowed:   true,
-		Patch:     patchBytes,
-		PatchType: &pt,
+		Allowed: true,
 	}
 }
 
@@ -125,55 +125,79 @@ func unMarshall(req *v1beta1.AdmissionRequest) (corev1.Pod, error) {
 	return pod, err
 }
 
-func shouldMutate(ignoredList []string, metadata *metav1.ObjectMeta) bool {
+func shouldMutate(ignoredList []string, metadata *metav1.ObjectMeta) ([]string, bool) {
 	for _, namespace := range ignoredList {
 		if metadata.Namespace == namespace {
 			glog.Infof("Skipping mutation for [%v] in special namespace: [%v]", metadata.Name, metadata.Namespace)
-			return false
+			return nil, false
 		}
 	}
 
-	required := false
 	annotations := metadata.GetAnnotations()
 	if annotations == nil {
 		annotations = map[string]string{}
 	}
 
-	status := annotations[sideCarInjectionStatusAnnotation]
-	if strings.ToLower(status) != injectedValue {
-		switch strings.ToLower(annotations[sideCarInjectionAnnotation]) {
-		case "y", "yes", "true", "on":
-			required = true
+	if status, ok := annotations[sideCarInjectionStatusAnnotation]; ok && strings.ToLower(status) == injectedValue {
+		glog.Infof("Skipping mutation for [%v]. Has been mutated already", metadata.Name)
+		return nil, false
+	}
+
+	if sidecars, ok := annotations[sideCarInjectionAnnotation]; ok {
+		parts := strings.Split(sidecars, ",")
+		for i := range parts {
+			parts[i] = strings.Trim(parts[i], " ")
+		}
+
+		if len(parts) > 0 {
+			glog.Infof("sideCar injection for %v/%v: sidecars: %v", metadata.Namespace, metadata.Name, sidecars)
+			return parts, true
 		}
 	}
 
-	glog.Infof("sideCar injection for %v/%v: status: %q required:%v", metadata.Namespace, metadata.Name, status, required)
-	return required
+	glog.Infof("Skipping mutation for [%v]. No action required", metadata.Name)
+	return nil, false
 }
 
-func createPatch(pod *corev1.Pod, inSidecarConfig *SideCar, annotations map[string]string) ([]byte, error) {
-	sideCar, err := makeCopy(inSidecarConfig)
-	if err != nil {
-		return nil, err
-	}
+func createPatch(pod *corev1.Pod, sideCarNames []string, sideCars map[string]*SideCar, annotations map[string]string) ([]byte, error) {
 
-	// copies all annotations in the pod with sideCarNameSpace as env
-	// in the injected sidecar containers
-	envVariables := getEnvToInject(pod.Annotations)
-	if len(envVariables) > 0 {
-		for i := range sideCar.Containers {
-			sideCar.Containers[i].Env = append(sideCar.Containers[i].Env, envVariables...)
+	var patch []patchOperation
+	var containers       []corev1.Container
+	var volumes          []corev1.Volume
+	var imagePullSecrets []corev1.LocalObjectReference
+	count := 0
+
+	for _, name := range sideCarNames {
+		if sideCar, ok := sideCars[name]; ok {
+			sideCarCopy := sideCar
+
+			// copies all annotations in the pod with sideCarNameSpace as env
+			// in the injected sidecar containers
+			envVariables := getEnvToInject(pod.Annotations)
+			if len(envVariables) > 0 {
+				for i := range sideCarCopy.Containers {
+					sideCarCopy.Containers[i].Env = append(sideCarCopy.Containers[i].Env, envVariables...)
+				}
+			}
+
+			containers = append(containers, sideCarCopy.Containers...)
+			volumes = append(volumes, sideCarCopy.Volumes...)
+			imagePullSecrets = append(imagePullSecrets, sideCarCopy.ImagePullSecrets...)
+
+			count++
 		}
 	}
 
-	var patch []patchOperation
-	patch = append(patch, addContainer(pod.Spec.Containers, sideCar.Containers, "/spec/containers")...)
-	patch = append(patch, addVolume(pod.Spec.Volumes, sideCar.Volumes, "/spec/volumes")...)
-	patch = append(patch, addImagePullSecrets(pod.Spec.ImagePullSecrets, sideCar.ImagePullSecrets, "/spec/imagePullSecrets")...)
+	if len(sideCarNames) == count {
+		patch = append(patch, addContainer(pod.Spec.Containers, containers, "/spec/containers")...)
+		patch = append(patch, addVolume(pod.Spec.Volumes, volumes, "/spec/volumes")...)
+		patch = append(patch, addImagePullSecrets(pod.Spec.ImagePullSecrets, imagePullSecrets, "/spec/imagePullSecrets")...)
+		patch = append(patch, updateAnnotation(pod.Annotations, annotations)...)
 
-	patch = append(patch, updateAnnotation(pod.Annotations, annotations)...)
+		return json.Marshal(patch)
+	}
 
-	return json.Marshal(patch)
+	return nil, errors.New(fmt.Sprintf("Did not find one or more sidecars to inject %v", sideCarNames))
 }
 
 func addContainer(target, added []corev1.Container, basePath string) []patchOperation {
@@ -266,21 +290,6 @@ func updateAnnotation(target map[string]string, added map[string]string) []patch
 		}
 	}
 	return patch
-}
-
-func makeCopy(src *SideCar) (*SideCar, error) {
-	data, err := yaml.Marshal(src)
-	if err != nil {
-		return nil, err
-	}
-
-	var dst SideCar
-	err = yaml.Unmarshal(data, &dst)
-	if err != nil {
-		return nil, err
-	}
-
-	return &dst, nil
 }
 
 func getEnvToInject(annotations map[string]string) []corev1.EnvVar {

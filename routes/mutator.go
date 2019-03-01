@@ -12,19 +12,33 @@ import (
 	"github.com/golang/glog"
 )
 
-func loadConfig(sideCarConfigFile string) (*webhook.SideCar, error) {
+type SideCars struct {
+	Sidecars []SideCar	`yaml:"sidecars"`
+}
+
+type SideCar struct {
+	Name    string          `yaml:"name"`
+	Sidecar webhook.SideCar `yaml:"sidecar"`
+}
+
+func loadConfig(sideCarConfigFile string) (map[string]*webhook.SideCar, error) {
 	data, err := ioutil.ReadFile(sideCarConfigFile)
 	if err != nil {
 		return nil, err
 	}
 	glog.Infof("New sideCar configuration: %s", data)
 
-	var cfg webhook.SideCar
+	var cfg SideCars
 	if err := yaml.Unmarshal(data, &cfg); err != nil {
 		return nil, err
 	}
 
-	return &cfg, nil
+	mapOfSideCar := make(map[string]*webhook.SideCar)
+	for _, configuration := range cfg.Sidecars {
+		mapOfSideCar[configuration.Name] = &configuration.Sidecar
+	}
+
+	return mapOfSideCar, nil
 }
 
 type MutatorController interface {
@@ -32,9 +46,9 @@ type MutatorController interface {
 }
 
 func NewMutatorController(sideCarConfigFile string) (MutatorController, error) {
-	sideCarConfig, err := loadConfig(sideCarConfigFile)
-	if sideCarConfig != nil {
-		return mutatorController{mutator: webhook.Mutator{SideCar: sideCarConfig}}, nil
+	mapOfSideCars, err := loadConfig(sideCarConfigFile)
+	if mapOfSideCars != nil {
+		return mutatorController{mutator: webhook.Mutator{SideCars: mapOfSideCars}}, nil
 	}
 	return nil, err
 }
