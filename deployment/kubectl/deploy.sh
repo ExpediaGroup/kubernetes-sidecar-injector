@@ -34,9 +34,9 @@ fi
 # The server key/cert k8s CA cert are stored in a k8s secret.
 #
 # namespace: default
-# secret-name: haystack-kube-sidecar-injector-certs
-# service-name: haystack-kube-sidecar-injector-svc
-${BASEDIR}/create-server-cert.sh -p haystack-kube-sidecar-injector-certs -n default -s haystack-kube-sidecar-injector-svc
+# secret-name: kubernetes-sidecar-injector-certs
+# service-name: kubernetes-sidecar-injector-svc
+${BASEDIR}/create-server-cert.sh -p kubernetes-sidecar-injector-certs -n default -s kubernetes-sidecar-injector-svc
 
 # create deployment spec for mutating-webhook.
 # This script uses a template and populates the template with the CA file from k8s

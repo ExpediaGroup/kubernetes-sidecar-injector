@@ -20,7 +20,7 @@ data:
                 - containerPort: 35000
               volumeMounts:
                 - name: agent-conf
-                mountPath: /app/haystack
+                  mountPath: /app/haystack
           volumes:
             - name: agent-conf
               configMap:

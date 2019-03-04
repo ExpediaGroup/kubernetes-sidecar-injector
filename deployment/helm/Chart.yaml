@@ -1,10 +1,10 @@
-name: haystack-kube-sidecar-injector
+name: kubernetes-sidecar-injector
 home: https://github.com/expediadotcom/haystack-kube-sidecar-injector
 version: 0.1
 appVersion: 0.1
 keywords:
-  - haystack
-  - distributed-tracing
+  - kubernetes
+  - sidecar-injection
 description:
 apiVersion:
 sources:

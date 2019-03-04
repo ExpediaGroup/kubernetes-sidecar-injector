@@ -4,7 +4,7 @@
   "metadata": {
     "name": "default",
     "labels": {
-      "haystack-sidecar-injector": "enabled"
+      "kubernetes-sidecar-injector": "enabled"
     }
   }
 }

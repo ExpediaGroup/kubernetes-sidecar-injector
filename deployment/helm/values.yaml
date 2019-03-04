@@ -4,5 +4,5 @@
 # name: value
 
 image:
-  repository: expediadotcom/haystack-kube-sidecar-injector
+  repository: expediadotcom/kubernetes-sidecar-injector
   tag: latest
