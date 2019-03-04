@@ -23,15 +23,15 @@ spec:
             - -logtostderr
             - 2>&1
           volumeMounts:
-            - name: haystack-injector-certs
+            - name: kubernetes-sidecar-injector-certs
               mountPath: /opt/kubernetes-sidecar-injector/certs
               readOnly: true
-            - name: haystack-sidecar-config
+            - name: kubernetes-sidecars-configmap
               mountPath: /opt/kubernetes-sidecar-injector
       volumes:
-        - name: haystack-injector-certs
+        - name: kubernetes-sidecar-injector-certs
           secret:
             secretName: kubernetes-sidecar-injector-certs
-        - name: haystack-sidecar-config
+        - name: kubernetes-sidecars-configmap
           configMap:
-            name: haystack-sidecar-configmap
+            name: kubernetes-sidecars-configmap

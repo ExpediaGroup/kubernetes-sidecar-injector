@@ -41,7 +41,7 @@ We have provided two ways to deploy this webhook. Using [Helm](https://helm.sh/)
 
 Lets go over the files in the __deployment/kubectl__ folder.
 
-1. __sidecar-configmap.yaml__:  This file contains two _configmap_ entries.  First one, _haystack-sidecar-configmap_ contains a map of named sidecar containers to be injected. In this case, we have only one named sidecar called `hatrack-agent`. Second one _haystack-agent-conf-configmap_ contains a configuration file that is used by haystack-agent sidecar. 
+1. __sidecar-configmap.yaml__:  This file contains two _configmap_ entries.  First one, _kubernetes-sidecars-configmap_ contains a map of named sidecar containers to be injected. In this case, we have only one named sidecar called `hatrack-agent`. Second one _haystack-agent-conf-configmap_ contains a configuration file that is used by haystack-agent sidecar. 
 
     _Though this file carries only haystack-agent, one can_  __replace this or add more sidecars with to be injected__. 
 

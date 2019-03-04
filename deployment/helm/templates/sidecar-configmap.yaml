@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: haystack-sidecar-configmap
+  name: kubernetes-sidecars-configmap
 data:
   sidecarconfig.yaml: |
     sidecars:

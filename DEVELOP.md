@@ -134,7 +134,7 @@ kubectl delete mutatingwebhookconfiguration kubernetes-sidecar-injector-webhook
 kubectl delete service kubernetes-sidecar-injector-svc
 kubectl delete deployment kubernetes-sidecar-injector-deployment
 kubectl delete configmap haystack-agent-conf-configmap
-kubectl delete configmap haystack-sidecar-configmap
+kubectl delete configmap kubernetes-sidecars-configmap
 kubectl delete secret kubernetes-sidecar-injector-certs
 ```
 
