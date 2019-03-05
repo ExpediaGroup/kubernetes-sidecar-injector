@@ -1,8 +1,8 @@
-# Default values for Haystack kube sidecar intector
+# Default values for kube sidecar intector
 # This is a YAML-formatted file.
 # Declare name/value pairs to be passed into your templates.
 # name: value
 
 image:
-  repository: expediadotcom/haystack-kube-sidecar-injector
+  repository: expediadotcom/kubernetes-sidecar-injector
   tag: latest

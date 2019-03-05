@@ -1,5 +1,5 @@
 SHELL := /bin/bash
-CONTAINER_NAME=expediadotcom/haystack-kube-sidecar-injector
+CONTAINER_NAME=expediadotcom/kubernetes-sidecar-injector
 
 SRC=$(shell find . -type f -name '*.go' -not -path "./vendor/*")
 
@@ -19,10 +19,10 @@ ensure:
 	dep ensure
 
 build: ensure clean vet lint
-	go build
+	go build -o kubernetes-sidecar-injector
 
 release: ensure clean vet lint
-	CGO_ENABLED=0 GOOS=linux go build
+	CGO_ENABLED=0 GOOS=linux go build -o kubernetes-sidecar-injector
 	docker build --no-cache -t ${CONTAINER_NAME} .
-	rm haystack-kube-sidecar-injector
+	rm kubernetes-sidecar-injector
 

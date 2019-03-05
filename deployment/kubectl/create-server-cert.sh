@@ -45,8 +45,8 @@ do
      esac
 done
 
-[[ -z ${SERVICE} ]] && SERVICE=haystack-kube-sidecar-injector-svc
-[[ -z ${SECRET} ]] && SECRET=haystack-kube-sidecar-injector-certs
+[[ -z ${SERVICE} ]] && SERVICE=kubernetes-sidecar-injector-svc
+[[ -z ${SECRET} ]] && SECRET=kubernetes-sidecar-injector-certs
 [[ -z ${NAMESPACE} ]] && NAMESPACE=default
 
 if [[ ! "$(command -v openssl)" ]]; then

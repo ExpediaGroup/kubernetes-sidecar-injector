@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-CONTAINER_NAME=expediadotcom/haystack-kube-sidecar-injector
+CONTAINER_NAME=expediadotcom/kubernetes-sidecar-injector
 CONTAINER_LATEST=${CONTAINER_NAME}:latest
 
 echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin

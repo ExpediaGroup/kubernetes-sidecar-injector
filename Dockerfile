@@ -1,5 +1,5 @@
 FROM scratch
 
-ADD haystack-kube-sidecar-injector /haystack-kube-sidecar-injector
+ADD kubernetes-sidecar-injector /kubernetes-sidecar-injector
     
-ENTRYPOINT ["/haystack-kube-sidecar-injector"]
+ENTRYPOINT ["/kubernetes-sidecar-injector"]

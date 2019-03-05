@@ -35,7 +35,7 @@ make build
 * Run
 
 ```bash
-./haystack-kube-sidecar-injector -port=8443 -certFile=sample/certs/cert.pem  -keyFile=sample/certs/key.pem -sideCar=sample/sidecar.yaml -logtostderr
+./kubernetes-sidecar-injector -port=8443 -certFile=sample/certs/cert.pem  -keyFile=sample/certs/key.pem -sideCar=sample/sidecar.yaml -logtostderr
 ```
 
 * Send a sample request
@@ -49,13 +49,13 @@ curl -kvX POST --header "Content-Type: application/json" -d @sample/admission-re
 * Build
 
 ```bash
-make docker
+make release
 ```
 
 * Run
 
 ```bash
-docker run -d --name injector -p 8443:443 --mount type=bind,src=/Users/mchandramouli/src/go/src/github.com/expediadotcom/haystack-kube-sidecar-injector/sample,dst=/etc/mutator expediadotcom/haystack-kube-sidecar-injector:latest -logtostderr
+docker run -d --name injector -p 8443:443 --mount type=bind,src=/Users/mchandramouli/src/go/src/github.com/expediadotcom/haystack-kube-sidecar-injector/sample,dst=/etc/mutator expediadotcom/kubernetes-sidecar-injector:latest -logtostderr
 ```
 
 * Send a sample request
@@ -70,12 +70,17 @@ curl -kvX POST --header "Content-Type: application/json" -d @sample/admission-re
 
 To deploy and test this in [minikube](https://kubernetes.io/docs/tasks/tools/install-minikube/)
 * build docker container locally with the fixes
-* update `deployment/kubectl/sidecar-injector-deployment.yaml` file to use the local docker image
+
+```
+eval $(minikube docker-env)
+make release
+```
+
 * run the command
 
 ```bash
 ./deployment/kubectl/deploy.sh
-``` 
+```
 (To understand the command above - check the [README](README.md) file)
 
 After deployment, one can check the service running by
@@ -84,7 +89,7 @@ After deployment, one can check the service running by
 kubectl get pod
 
 NAME                                                        READY     STATUS    RESTARTS   AGE
-haystack-kube-sidecar-injector-deployment-5b5874466-k4gnk   1/1       Running   0          1m
+kubernetes-sidecar-injector-deployment-5b5874466-k4gnk   1/1       Running   0          1m
 
 ```
 
@@ -92,7 +97,7 @@ haystack-kube-sidecar-injector-deployment-5b5874466-k4gnk   1/1       Running   
 
 Before deploying a pod to see the side car being injected, one needs to do one additional step.  
 
-[Registration spec of this mutating webhook](deployment/mutatingwebhook-template.yaml#L22) specifies that this webhook be called only for pods deployed in namespaces with a label `haystack-sidecar-injector: enabled`
+[Registration spec of this mutating webhook](deployment/mutatingwebhook-template.yaml#L22) specifies that this webhook be called only for pods deployed in namespaces with a label `kubernetes-sidecar-injector: enabled`
 
 Following spec applies this label to `default` namespace
 
@@ -102,7 +107,7 @@ kubectl apply -f sample/namespace-label.yaml
 
 ### Test the webhook
 
-One can run the following command to deploy a sample `echo-server`. Note, this [deployment spec carries an annotation](sample/echo-server.yaml#L12) `haystack-kube-sidecar-injector.expedia.com/inject: "yes"` that triggers injection of the sidecar.
+One can run the following command to deploy a sample `echo-server`. Note, this [deployment spec carries an annotation](sample/echo-server.yaml#L12) `sidecar-injector.expedia.com/inject: "haystack-agent"` that triggers injection of `haystack-agent` sidecar defined in [sidecar-configmap.yaml](deployment/kubectl/sidecar-configmap.yaml) file.
 
 ```bash
 kubectl apply -f sample/echo-server.yaml
@@ -115,9 +120,26 @@ kubectl get pod
 
 NAME                                                        READY     STATUS             RESTARTS   AGE
 echo-server-deployment-849b87649d-9x95k                     2/2       Running            0          4m
-haystack-kube-sidecar-injector-deployment-cc4648b7f-bdk2v   1/1       Running            0          6m
+kubernetes-sidecar-injector-deployment-cc4648b7f-bdk2v   1/1       Running            0          6m
 ```
 
 Note the **2 containers** in the echo-server pod instead of one. 
+
+### Clean up webhook
+
+Run the following commands to delete and cleanup the deployed webhook
+
+```
+kubectl delete mutatingwebhookconfiguration kubernetes-sidecar-injector-webhook
+kubectl delete service kubernetes-sidecar-injector-svc
+kubectl delete deployment kubernetes-sidecar-injector-deployment
+kubectl delete configmap haystack-agent-conf-configmap
+kubectl delete configmap kubernetes-sidecars-configmap
+kubectl delete secret kubernetes-sidecar-injector-certs
+```
+
+
+
+
 
 
