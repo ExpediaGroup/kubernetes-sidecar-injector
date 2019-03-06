@@ -7,7 +7,7 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	"github.com/ExpediaDotCom/haystack-kube-sidecar-injector/webhook"
+	"github.com/ExpediaDotCom/kubernetes-sidecar-injector/webhook"
 	"github.com/ghodss/yaml"
 	"github.com/golang/glog"
 )
