@@ -6,14 +6,17 @@ import (
 	"net/http"
 )
 
+/*Conf is the required config to create httpd server*/
 type Conf struct {
 	Port     int
 	CertFile string
 	KeyFile  string
 }
 
+/*Route is the signature of the route handler*/
 type Route func(http.ResponseWriter, *http.Request)
 
+/*SimpleServer is a simple http server supporting TLS*/
 type SimpleServer interface {
 	Port() int
 	AddRoute(string, Route)
@@ -21,6 +24,7 @@ type SimpleServer interface {
 	Shutdown()
 }
 
+/*NewSimpleServer is a factory function to create an instance of SimpleServer*/
 func NewSimpleServer(conf Conf) SimpleServer {
 	return &simpleServerImpl{
 		conf: conf,

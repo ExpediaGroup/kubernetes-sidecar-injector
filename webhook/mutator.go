@@ -2,7 +2,6 @@ package webhook
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"strings"
 
@@ -40,16 +39,19 @@ type patchOperation struct {
 	Value interface{} `json:"value,omitempty"`
 }
 
+/*SideCar is the template of the sidecar to be implemented*/
 type SideCar struct {
 	Containers       []corev1.Container            `yaml:"containers"`
 	Volumes          []corev1.Volume               `yaml:"volumes"`
 	ImagePullSecrets []corev1.LocalObjectReference `yaml:"imagePullSecrets"`
 }
 
+/*Mutator is the interface for mutating webhook*/
 type Mutator struct {
 	SideCars map[string]*SideCar
 }
 
+/*Mutate function performs the actual mutation of pod spec*/
 func (mutator Mutator) Mutate(req []byte) ([]byte, error) {
 	admissionReviewResp := v1beta1.AdmissionReview{}
 	admissionReviewReq := v1beta1.AdmissionReview{}
@@ -197,7 +199,7 @@ func createPatch(pod *corev1.Pod, sideCarNames []string, sideCars map[string]*Si
 		return json.Marshal(patch)
 	}
 
-	return nil, errors.New(fmt.Sprintf("Did not find one or more sidecars to inject %v", sideCarNames))
+	return nil, fmt.Errorf("Did not find one or more sidecars to inject %v", sideCarNames)
 }
 
 func addContainer(target, added []corev1.Container, basePath string) []patchOperation {
