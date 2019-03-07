@@ -12,10 +12,12 @@ import (
 	"github.com/golang/glog"
 )
 
+/*SideCars is an array of named SideCar instances*/
 type SideCars struct {
 	Sidecars []SideCar	`yaml:"sidecars"`
 }
 
+/*SideCar is a named sidecar to be injected*/
 type SideCar struct {
 	Name    string          `yaml:"name"`
 	Sidecar webhook.SideCar `yaml:"sidecar"`
@@ -41,10 +43,12 @@ func loadConfig(sideCarConfigFile string) (map[string]*webhook.SideCar, error) {
 	return mapOfSideCar, nil
 }
 
+/*MutatorController is an interface that implements mutation method*/
 type MutatorController interface {
 	Mutate(http.ResponseWriter, *http.Request)
 }
 
+/*NewMutatorController is a factory method to create an instance of MutatorController*/
 func NewMutatorController(sideCarConfigFile string) (MutatorController, error) {
 	mapOfSideCars, err := loadConfig(sideCarConfigFile)
 	if mapOfSideCars != nil {
