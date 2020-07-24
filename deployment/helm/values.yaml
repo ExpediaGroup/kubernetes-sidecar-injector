@@ -4,6 +4,9 @@
 # name: value
 
 namespace: sidecar-webhook
+
+app_name: kubernetes-sidecar-injector
+
 image:
   repository: expediadotcom/kubernetes-sidecar-injector
   tag: latest

@@ -4,19 +4,19 @@ metadata:
   name: kubernetes-sidecar-injector-deployment
   namespace: {{ .Values.namespace }}
   labels:
-    app: kubernetes-sidecar-injector
+    app: {{ .Values.app_name }}
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: kubernetes-sidecar-injector
+      app: {{ .Values.app_name }}
   template:
     metadata:
       labels:
-        app: kubernetes-sidecar-injector
+        app: {{ .Values.app_name }}
     spec:
       containers:
-        - name: kubernetes-sidecar-injector
+        - name: {{ .Values.app_name }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: IfNotPresent
           args:

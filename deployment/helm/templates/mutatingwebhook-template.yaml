@@ -2,6 +2,7 @@
 {{- $cn := printf "%s-%s" .Release.Name .Chart.Name }}
 {{- $altName1 := "kubernetes-sidecar-injector-svc.default.svc" }}
 {{- $cert := genSignedCert $cn nil (list $altName1) 3650 $ca }}
+
 apiVersion: admissionregistration.k8s.io/v1beta1
 kind: MutatingWebhookConfiguration
 metadata:
