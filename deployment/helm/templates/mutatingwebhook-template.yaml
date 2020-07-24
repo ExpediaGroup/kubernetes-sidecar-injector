@@ -5,6 +5,7 @@
 apiVersion: admissionregistration.k8s.io/v1beta1
 kind: MutatingWebhookConfiguration
 metadata:
+  namespace: {{ .Values.namespace }}
   name: kubernetes-sidecar-injector-webhook
   labels:
     app: kubernetes-sidecar-injector
