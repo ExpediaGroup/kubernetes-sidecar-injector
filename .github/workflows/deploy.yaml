@@ -3,6 +3,8 @@ name: Go
 on:
   push:
     branches: [ master ]
+  pull_request: # Remove
+    branches: [ master ]
 jobs:
   build:
     runs-on: ubuntu-latest
