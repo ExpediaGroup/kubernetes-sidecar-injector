@@ -7,14 +7,14 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	"github.com/ExpediaDotCom/kubernetes-sidecar-injector/webhook"
+	"github.com/expediagroup/kubernetes-sidecar-injector/webhook"
 	"github.com/ghodss/yaml"
 	"github.com/golang/glog"
 )
 
 /*SideCars is an array of named SideCar instances*/
 type SideCars struct {
-	Sidecars []SideCar	`yaml:"sidecars"`
+	Sidecars []SideCar `yaml:"sidecars"`
 }
 
 /*SideCar is a named sidecar to be injected*/

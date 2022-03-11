@@ -6,8 +6,8 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/ExpediaDotCom/kubernetes-sidecar-injector/httpd"
-	"github.com/ExpediaDotCom/kubernetes-sidecar-injector/routes"
+	"github.com/expediagroup/kubernetes-sidecar-injector/httpd"
+	"github.com/expediagroup/kubernetes-sidecar-injector/routes"
 	"github.com/golang/glog"
 )
 

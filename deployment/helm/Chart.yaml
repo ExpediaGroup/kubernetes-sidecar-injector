@@ -1,6 +1,6 @@
 name: kubernetes-sidecar-injector
-home: https://github.com/expediadotcom/kubernetes-sidecar-injector
-version: 0.1
+home: https://github.com/expediagroup/kubernetes-sidecar-injector
+version: 0.0.1
 appVersion: 0.1
 keywords:
   - kubernetes
@@ -8,7 +8,7 @@ keywords:
 description:
 apiVersion:
 sources:
-- https://github.com/expediadotcom/kubernetes-sidecar-injector
+- https://github.com/expediagroup/kubernetes-sidecar-injector
 maintainers:
 - name: Ayan Sen
   email: aysen@expedia.com

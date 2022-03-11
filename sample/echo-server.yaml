@@ -1,18 +1,21 @@
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: echo-server-deployment
   labels:
-    app: echo-server
+    app.kubernetes.io/name: echo-server
 spec:
   replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: echo-server
   template:
     metadata:
       annotations:
         sidecar-injector.expedia.com/inject: "haystack-agent"
         sidecar-injector.expedia.com/some-api-key: "6feab492-fc9b-4c38-b50d-3791718c8203"
       labels:
-        app: echo-server
+        app.kubernetes.io/name: echo-server
     spec:
       containers:
         - name: echo-server

@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-CONTAINER_NAME=expediadotcom/kubernetes-sidecar-injector
+CONTAINER_NAME=expediagroup/kubernetes-sidecar-injector
 CONTAINER_LATEST=${CONTAINER_NAME}:latest
 
-echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+echo "DOCKER_HUB_PASSWORD" | docker login -u "DOCKER_HUB_USERNAME" --password-stdin
 
 if [[ "${BRANCH}" == 'master' && "${PULL_REQUEST}" == 'false' ]]; then
   CONTAINER_VERSION=${CONTAINER_NAME}:v1.0-RC-$(date "+%Y%m%d%H%M%S")
