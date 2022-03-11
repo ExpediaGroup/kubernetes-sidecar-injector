@@ -27,7 +27,7 @@ jobs:
         run: make release
 
       - name: Deploy
-        run: ${{ github.head_ref }}-${{ steps.date.outputs.date }}
+        run: echo ${{ github.head_ref }}-${{ steps.date.outputs.date }}
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v1
