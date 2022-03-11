@@ -1,9 +1,5 @@
 name: Deploy PR
 
-env:
-  GITHUB_OBJECT: |
-    ${{ toJson(github) }}
-
 on:
   pull_request:
     branches: [ master ]
