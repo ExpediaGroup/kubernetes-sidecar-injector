@@ -1,6 +1,8 @@
 name: Deploy PR
 
 on:
+  push:
+    branches: [ master ]
   pull_request:
     branches: [ master ]
 jobs:
@@ -8,10 +10,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: Construct Docker Tag
-        id: docker_tag
+      - name: Construct PR Docker Tag
+        if:  ${{ github.event_name == 'pull_request' }}
+        id: pr_docker_tag
         run: echo "::set-output name=tag::$(echo ${{ github.head_ref }} | tr '/' '-')-$(date +'%Y%m%d%H%M%S')"
-
+      - name: Construct Master Docker Tag
+        if: ${{ github.event_name == 'push' }}
+        id: docker_tag
+        run: echo "::set-output name=tag::v1.0-RC-$(date +'%Y%m%d%H%M%S')"
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v1
       - name: Login to DockerHub
@@ -19,8 +25,15 @@ jobs:
         with:
           username: ${{ secrets.DOCKER_HUB_USERNAME }}
           password: ${{ secrets.DOCKER_HUB_PASSWORD }}
-      - name: Build and push
+      - name: Build and push pull request
+        if:  ${{ github.event_name == 'pull_request' }}
         uses: docker/build-push-action@v2
         with:
           push: true
-          tags: expediagroup/kubernetes-sidecar-injector:${{ steps.docker_tag.outputs.tag }}
+          tags: expediagroup/kubernetes-sidecar-injector:${{ steps.pr_docker_tag.outputs.tag }}
+      - name: Build and push merge to master
+        if:  ${{ github.event_name == 'push' }}
+        uses: docker/build-push-action@v2
+        with:
+          push: true
+          tags: expediagroup/kubernetes-sidecar-injector:${{ steps.docker_tag.outputs.tag }},expediagroup/kubernetes-sidecar-injector:latest
