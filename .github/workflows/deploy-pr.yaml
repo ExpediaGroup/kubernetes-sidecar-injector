@@ -13,8 +13,8 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Get current date
-        id: date
-        run: echo "::set-output name=date::$(date +'%Y%m%d%H%M%S')"
+        id: tag
+        run: echo "::set-output name=tag::$(echo ${{ github.head_ref }} | tr '/' '-')-$(date +'%Y%m%d%H%M%S')"
       - name: Set up Go
         uses: actions/setup-go@v2
         with:
@@ -27,7 +27,7 @@ jobs:
         run: make release
 
       - name: Deploy
-        run: echo ${{ github.head_ref }}-${{ steps.date.outputs.date }}
+        run: echo ${{ steps.date.outputs.tag }}
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v1
@@ -36,8 +36,8 @@ jobs:
         with:
           username: ${{ secrets.DOCKER_HUB_USERNAME }}
           password: ${{ secrets.DOCKER_HUB_PASSWORD }}
-#      - name: Build and push
-#        uses: docker/build-push-action@v2
-#        with:
-#          push: true
-#          tags: ${{ github.head_ref }}-$(date "+%Y%m%d%H%M%S")
+      - name: Build and push
+        uses: docker/build-push-action@v2
+        with:
+          push: true
+          tags: ${{ github.head_ref }}-${{ steps.date.outputs.date }}
