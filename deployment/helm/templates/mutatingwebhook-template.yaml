@@ -1,6 +1,6 @@
-{{- $caPrefix := printf "%s-ca" .Chart.Name }}
+{{- $caPrefix := printf "%s-ca" .Release.Name }}
 {{- $ca := genCA $caPrefix 3650 }}
-{{- $cn := .Chart.Name }}
+{{- $cn := .Release.Name }}
 {{- $altName1 := printf "%s.%s.svc" (include "service.name" .) .Release.Namespace }}
 {{- $cert := genSignedCert $cn nil (list $altName1) 3650 $ca }}
 ---
@@ -19,14 +19,14 @@ data:
 apiVersion: admissionregistration.k8s.io/v1beta1
 kind: MutatingWebhookConfiguration
 metadata:
-  name: {{ .Chart.Name }}
+  name: {{ .Release.Name }}
   labels:
     {{- include "common.labels" . | indent 4 }}
 webhooks:
   - name: kubernetes-sidecar-injector.expedia.com
     clientConfig:
       service:
-        name: {{ .Chart.Name }}
+        name: {{ .Release.Name }}
         namespace: {{ .Release.Namespace }}
         path: "/mutate"
       caBundle: {{ b64enc $ca.Cert }}
@@ -50,7 +50,7 @@ webhooks:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ .Chart.Name }}
+  name: {{ .Release.Name }}
   namespace: {{ .Release.Namespace }}
   labels:
     {{- include "common.labels" . | indent 4 }}
@@ -78,15 +78,15 @@ spec:
             - -logtostderr
             - 2>&1
           volumeMounts:
-            - name: {{ .Chart.Name }}-certs
+            - name: {{ .Release.Name }}-certs
               mountPath: /opt/kubernetes-sidecar-injector/certs
               readOnly: true
-            - name: {{ .Chart.Name }}-configmap
+            - name: {{ .Release.Name }}-configmap
               mountPath: /opt/kubernetes-sidecar-injector
       volumes:
-        - name: {{ .Chart.Name }}-certs
+        - name: {{ .Release.Name }}-certs
           secret:
             secretName: {{ include "certs.secret.name" . }}
-        - name: {{ .Chart.Name }}-configmap
+        - name: {{ .Release.Name }}-configmap
           configMap:
             name: kubernetes-sidecars-configmap
