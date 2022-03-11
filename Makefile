@@ -21,7 +21,6 @@ build: clean vet lint
 release: clean vet lint
 	CGO_ENABLED=0 GOOS=linux go build -o kubernetes-sidecar-injector
 
-docker: release
+docker:
 	docker build --no-cache -t ${CONTAINER_NAME} .
-	rm kubernetes-sidecar-injector
 

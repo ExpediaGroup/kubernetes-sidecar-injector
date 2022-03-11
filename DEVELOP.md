@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/ExpediaDotCom/kubernetes-sidecar-injector.svg?branch=master)](https://travis-ci.org/ExpediaGroup/kubernetes-sidecar-injector)
+![example branch parameter](https://github.com/ExpediaGroup/kubernetes-sidecar-injector/actions/workflows/deploy.yaml/badge.svg?branch=master)
 [![License](https://img.shields.io/badge/license-Apache%20License%202.0-blue.svg)](https://github.com/ExpediaGroup/kubernetes-sidecar-injector/blob/master/LICENSE)
 
 ## Contributing
@@ -8,17 +8,12 @@ Code contributions are always welcome.
 * Open an issue in the repo with defect/enhancements
 * We can also be reached @ https://gitter.im/expedia-haystack/Lobby
 * Fork, make the changes, build and test it locally
-* Issue a PR
+* Issue a PR- watch the PR build in [deploy](https://github.com/ExpediaGroup/kubernetes-sidecar-injector/actions)
 * Once merged to master, travis-ci will build and release the container with latest tag
 
 
 ## Dependencies
-
-* Install `dep` and `goimports`
-
 ```bash
-go get -u github.com/golang/dep/cmd/dep
-go get golang.org/x/tools/cmd/goimports
 go get -u golang.org/x/lint/golint
 ```
 
@@ -49,13 +44,13 @@ curl -kvX POST --header "Content-Type: application/json" -d @sample/admission-re
 * Build
 
 ```bash
-make release
+make docker
 ```
 
 * Run
 
 ```bash
-docker run -d --name injector -p 8443:443 --mount type=bind,src=/Users/mchandramouli/src/go/src/github.com/expediadotcom/kubernetes-sidecar-injector/sample,dst=/etc/mutator expediadotcom/kubernetes-sidecar-injector:latest -logtostderr
+docker run -d --name injector -p 8443:443 --mount type=bind,src=${PWD}/sample,dst=/etc/mutator expediagroup/kubernetes-sidecar-injector:latest -logtostderr
 ```
 
 * Send a sample request

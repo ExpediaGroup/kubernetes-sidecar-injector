@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/ExpediaDotCom/kubernetes-sidecar-injector.svg?branch=master)](https://travis-ci.org/ExpediaGroup/kubernetes-sidecar-injector)
+![example branch parameter](https://github.com/ExpediaGroup/kubernetes-sidecar-injector/actions/workflows/deploy.yaml/badge.svg?branch=master)
 [![License](https://img.shields.io/badge/license-Apache%20License%202.0-blue.svg)](https://github.com/ExpediaGroup/kubernetes-sidecar-injector/blob/master/LICENSE)
 
 Kubernetes Mutating Webhook
