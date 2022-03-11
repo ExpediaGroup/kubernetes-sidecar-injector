@@ -1,5 +1,5 @@
-[![Build Status](https://travis-ci.org/ExpediaDotCom/kubernetes-sidecar-injector.svg?branch=master)](https://travis-ci.org/ExpediaDotCom/kubernetes-sidecar-injector)
-[![License](https://img.shields.io/badge/license-Apache%20License%202.0-blue.svg)](https://github.com/ExpediaDotCom/haystack/blob/master/LICENSE)
+[![Build Status](https://travis-ci.org/ExpediaDotCom/kubernetes-sidecar-injector.svg?branch=master)](https://travis-ci.org/ExpediaGroup/kubernetes-sidecar-injector)
+[![License](https://img.shields.io/badge/license-Apache%20License%202.0-blue.svg)](https://github.com/ExpediaGroup/kubernetes-sidecar-injector/blob/master/LICENSE)
 
 ## Contributing
 
@@ -8,7 +8,7 @@ Code contributions are always welcome.
 * Open an issue in the repo with defect/enhancements
 * We can also be reached @ https://gitter.im/expedia-haystack/Lobby
 * Fork, make the changes, build and test it locally
-* Issue a PR - watch the PR build in [travis-ci](https://travis-ci.org/ExpediaDotCom/kubernetes-sidecar-injector)
+* Issue a PR
 * Once merged to master, travis-ci will build and release the container with latest tag
 
 

@@ -9,7 +9,7 @@ data:
         sidecar:
           containers:
             - name: haystack-agent
-              image: expediadotcom/haystack-agent
+              image: expediagroup/haystack-agent
               imagePullPolicy: IfNotPresent
               args:
                 - --config-provider

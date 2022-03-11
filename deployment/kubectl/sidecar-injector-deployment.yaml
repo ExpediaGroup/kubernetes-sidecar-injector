@@ -13,7 +13,7 @@ spec:
     spec:
       containers:
         - name: kubernetes-sidecar-injector
-          image: expediadotcom/kubernetes-sidecar-injector:latest
+          image: expediagroup/kubernetes-sidecar-injector:latest
           imagePullPolicy: IfNotPresent
           args:
             - -port=8443

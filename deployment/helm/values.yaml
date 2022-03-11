@@ -4,5 +4,5 @@
 # name: value
 
 image:
-  repository: expediadotcom/kubernetes-sidecar-injector
+  repository: expediagroup/kubernetes-sidecar-injector
   tag: latest
