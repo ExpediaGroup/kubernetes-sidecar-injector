@@ -31,7 +31,7 @@ We have provided two ways to deploy this webhook. Using [Helm](https://helm.sh/)
     helm install --name kubernetes-sidecar-injector-webhook ./deployment/helm
     ```
 
-2. The command above installs the webhook and a map of named sidecars to be injected. One can find the map in [this config map file in kubectl folder](deployment/kubectl/sidecar-configmap.yaml) or [this configmap in helm folder](deployment/helm/templates/sidecar-configmap.yaml). In these files only one sidecar named `haystack-agent`has been configured.
+2. The command above installs the webhook and a map of named sidecars to be injected. One can find the map in [this config map file in kubectl folder](deployment/kubectl/sidecar-configmap.yaml) or [this configmap in helm folder](charts/kubernetes-sidecar-injector/templates/sidecar-configmap.yaml). In these files only one sidecar named `haystack-agent`has been configured.
 
 3. Apply the label `kubernetes-sidecar-injector: enabled` in the namespaces where the sidecar injection should be considered. [This sample](sample/namespace-label.yaml) file applies the label mentioned to _default_ namespace
 

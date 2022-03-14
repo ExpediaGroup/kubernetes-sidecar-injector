@@ -3,11 +3,11 @@ package routes
 import (
 	"errors"
 	"fmt"
+	"github.com/expediagroup/kubernetes-sidecar-injector/pkg/webhook"
 	"io"
 	"io/ioutil"
 	"net/http"
 
-	"github.com/expediagroup/kubernetes-sidecar-injector/webhook"
 	"github.com/ghodss/yaml"
 	"github.com/golang/glog"
 )

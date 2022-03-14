@@ -1,5 +1,7 @@
 SHELL := /bin/bash
 CONTAINER_NAME=expediagroup/kubernetes-sidecar-injector
+IMAGE_TAG?=$(shell git rev-parse HEAD)
+KIND_CLUSTER?=cluster1
 
 SRC=$(shell find . -type f -name '*.go' -not -path "./vendor/*")
 
@@ -22,5 +24,8 @@ release: clean vet lint
 	CGO_ENABLED=0 GOOS=linux go build -o kubernetes-sidecar-injector
 
 docker:
-	docker build --no-cache -t ${CONTAINER_NAME} .
+	docker build --no-cache -t ${CONTAINER_NAME}:${IMAGE_TAG} .
 
+kind-install: docker
+	kind load docker-image ${CONTAINER_NAME}:${IMAGE_TAG} --name ${KIND_CLUSTER}
+	helm upgrade -i kubernetes-sidecar-injector ./charts/kubernetes-sidecar-injector/. --namespace=kubernetes-sidecar-injector --create-namespace --set image.tag=${IMAGE_TAG}
