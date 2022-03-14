@@ -1,38 +1,92 @@
-{{- $ca := genCA "admission-controller-ca" 3650 }}
-{{- $cn := printf "%s-%s" .Release.Name .Chart.Name }}
-{{- $altName1 := "kubernetes-sidecar-injector-svc.default.svc" }}
+{{- $caPrefix := printf "%s-ca" .Release.Name }}
+{{- $ca := genCA $caPrefix 3650 }}
+{{- $cn := .Release.Name }}
+{{- $altName1 := printf "%s.%s.svc" (include "service.name" .) .Release.Namespace }}
 {{- $cert := genSignedCert $cn nil (list $altName1) 3650 $ca }}
-apiVersion: admissionregistration.k8s.io/v1beta1
-kind: MutatingWebhookConfiguration
-metadata:
-  name: kubernetes-sidecar-injector-webhook
-  labels:
-    app: kubernetes-sidecar-injector
-webhooks:
-  - name: kubernetes-sidecar-injector.expedia.com
-    clientConfig:
-      service:
-        name: kubernetes-sidecar-injector-svc
-        namespace: default
-        path: "/mutate"
-      caBundle: {{ b64enc $ca.Cert }}
-    failurePolicy:  Fail
-    rules:
-      - operations: [ "CREATE" ]
-        apiGroups: [""]
-        apiVersions: ["v1"]
-        resources: ["pods"]
-    namespaceSelector:
-      matchLabels:
-        kubernetes-sidecar-injector: enabled
-
 ---
 apiVersion: v1
 kind: Secret
 metadata:
-  name: kubernetes-sidecar-injector-certs
+  name: {{ include "certs.secret.name" . }}
+  namespace: {{ .Release.Namespace }}
   labels:
-    app: kubernetes-sidecar-injector-certs
+    {{- include "common.labels" . | indent 4 }}
 data:
   cert.pem: {{ b64enc $cert.Cert }}
   key.pem: {{ b64enc $cert.Key }}
+---
+{{/*apiVersion: admissionregistration.k8s.io/v1*/}}
+apiVersion: admissionregistration.k8s.io/v1beta1
+kind: MutatingWebhookConfiguration
+metadata:
+  name: {{ .Release.Name }}
+  labels:
+    {{- include "common.labels" . | indent 4 }}
+webhooks:
+  - name: kubernetes-sidecar-injector.expedia.com
+    clientConfig:
+      service:
+        name: {{ .Release.Name }}
+        namespace: {{ .Release.Namespace }}
+        path: "/mutate"
+      caBundle: {{ b64enc $ca.Cert }}
+    failurePolicy: Fail
+{{/*    sideEffects: None*/}}
+{{/*    admissionReviewVersions:*/}}
+{{/*      - v1*/}}
+    rules:
+      - apiGroups:
+          - ""
+        resources:
+          - pods
+        apiVersions:
+          - "*"
+        operations:
+          - CREATE
+    namespaceSelector:
+      matchLabels:
+        kubernetes-sidecar-injector: enabled
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "common.labels" . | indent 4 }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "common.labels" . | indent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "common.labels" . | indent 8 }}
+      annotations:
+        generated-cert: {{ sha256sum $cert.Cert }}
+    spec:
+      containers:
+        - name: kubernetes-sidecar-injector
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: IfNotPresent
+          args:
+            - -port=8443
+            - -certFile=/opt/kubernetes-sidecar-injector/certs/cert.pem
+            - -keyFile=/opt/kubernetes-sidecar-injector/certs/key.pem
+            - -sideCar=/opt/kubernetes-sidecar-injector/sidecarconfig.yaml
+            - -logtostderr
+            - 2>&1
+          volumeMounts:
+            - name: {{ .Release.Name }}-certs
+              mountPath: /opt/kubernetes-sidecar-injector/certs
+              readOnly: true
+            - name: {{ .Release.Name }}-configmap
+              mountPath: /opt/kubernetes-sidecar-injector
+      volumes:
+        - name: {{ .Release.Name }}-certs
+          secret:
+            secretName: {{ include "certs.secret.name" . }}
+        - name: {{ .Release.Name }}-configmap
+          configMap:
+            name: kubernetes-sidecars-configmap

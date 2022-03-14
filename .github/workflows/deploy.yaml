@@ -1,4 +1,4 @@
-name: Deploy PR
+name: Deploy
 
 on:
   push:
