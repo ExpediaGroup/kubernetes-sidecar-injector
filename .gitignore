@@ -4,6 +4,7 @@
 *.ipr
 *.iws
 kubernetes-sidecar-injector
+!charts/kubernetes-sidecar-injector
 generated-*.yaml
 
 Gopkg.lock
