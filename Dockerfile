@@ -2,8 +2,6 @@ FROM golang:1.16 as build
 RUN go get -u golang.org/x/lint/golint
 WORKDIR /build
 COPY . ./
-RUN pwd
-RUN ls
 RUN make release
 
 FROM scratch
