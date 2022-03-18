@@ -71,12 +71,10 @@ spec:
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: IfNotPresent
           args:
-            - -port=8443
-            - -certFile=/opt/kubernetes-sidecar-injector/certs/cert.pem
-            - -keyFile=/opt/kubernetes-sidecar-injector/certs/key.pem
-            - -sideCar=/opt/kubernetes-sidecar-injector/sidecarconfig.yaml
-            - -logtostderr
-            - 2>&1
+            - --port=8443
+            - --certFile=/opt/kubernetes-sidecar-injector/certs/cert.pem
+            - --keyFile=/opt/kubernetes-sidecar-injector/certs/key.pem
+            - --sideCar=/opt/kubernetes-sidecar-injector/sidecarconfig.yaml
           volumeMounts:
             - name: {{ .Release.Name }}-certs
               mountPath: /opt/kubernetes-sidecar-injector/certs
