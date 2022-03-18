@@ -20,7 +20,7 @@ type Route func(http.ResponseWriter, *http.Request)
 type SimpleServer interface {
 	Port() int
 	AddRoute(string, Route)
-	Start(chan error)
+	Start() error
 	Shutdown()
 }
 
@@ -49,15 +49,11 @@ func (s *simpleServerImpl) AddRoute(pattern string, route Route) {
 	s.mux.HandleFunc(pattern, route)
 }
 
-func (s *simpleServerImpl) Start(errs chan error) {
+func (s *simpleServerImpl) Start() error {
 	s.server.Handler = s.mux
-	go func() {
-		if err := s.server.ListenAndServeTLS(
-			s.conf.CertFile,
-			s.conf.KeyFile); err != nil {
-			errs <- err
-		}
-	}()
+	return s.server.ListenAndServeTLS(
+		s.conf.CertFile,
+		s.conf.KeyFile)
 }
 
 func (s *simpleServerImpl) Shutdown() {
