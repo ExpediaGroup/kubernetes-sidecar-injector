@@ -1,61 +1,32 @@
 package httpd
 
 import (
-	"context"
 	"fmt"
+	"github.com/expediagroup/kubernetes-sidecar-injector/pkg/routes"
 	"net/http"
 )
 
-/*Conf is the required config to create httpd server*/
-type Conf struct {
+/*SimpleServer is the required config to create httpd server*/
+type SimpleServer struct {
 	Port     int
 	CertFile string
 	KeyFile  string
 }
 
-/*Route is the signature of the route handler*/
-type Route func(http.ResponseWriter, *http.Request)
-
-/*SimpleServer is a simple http server supporting TLS*/
-type SimpleServer interface {
-	Port() int
-	AddRoute(string, Route)
-	Start() error
-	Shutdown()
-}
-
-/*NewSimpleServer is a factory function to create an instance of SimpleServer*/
-func NewSimpleServer(conf Conf) SimpleServer {
-	return &simpleServerImpl{
-		conf: conf,
-		mux:  http.NewServeMux(),
-		server: &http.Server{
-			Addr: fmt.Sprintf(":%d", conf.Port),
-		},
+/*Start the simple http server supporting TLS*/
+func (conf *SimpleServer) Start(sideCarConfigFile string) error {
+	server := &http.Server{
+		Addr: fmt.Sprintf(":%d", conf.Port),
 	}
-}
 
-type simpleServerImpl struct {
-	conf   Conf
-	server *http.Server
-	mux    *http.ServeMux
-}
+	mux := http.NewServeMux()
+	server.Handler = mux
 
-func (s *simpleServerImpl) Port() int {
-	return s.conf.Port
-}
+	if mutator, err := routes.NewMutatorController(sideCarConfigFile); err != nil {
+		return err
+	} else {
+		mux.HandleFunc("/mutate", mutator.Mutate)
+	}
 
-func (s *simpleServerImpl) AddRoute(pattern string, route Route) {
-	s.mux.HandleFunc(pattern, route)
-}
-
-func (s *simpleServerImpl) Start() error {
-	s.server.Handler = s.mux
-	return s.server.ListenAndServeTLS(
-		s.conf.CertFile,
-		s.conf.KeyFile)
-}
-
-func (s *simpleServerImpl) Shutdown() {
-	s.server.Shutdown(context.Background())
+	return server.ListenAndServeTLS(conf.CertFile, conf.KeyFile)
 }

@@ -2,14 +2,13 @@ package cmd
 
 import (
 	"github.com/expediagroup/kubernetes-sidecar-injector/pkg/httpd"
-	"github.com/expediagroup/kubernetes-sidecar-injector/pkg/routes"
 	"github.com/golang/glog"
 	"github.com/spf13/cobra"
 	"os"
 )
 
 var (
-	httpdConf         httpd.Conf
+	httpdConf         httpd.SimpleServer
 	sideCarConfigFile string
 )
 
@@ -17,36 +16,9 @@ var rootCmd = &cobra.Command{
 	Use:   "kubernetes-sidecar-injector",
 	Short: "Responsible for injecting sidecars into pod containers",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		simpleServer := httpd.NewSimpleServer(httpdConf)
-
-		if err := addRoutes(simpleServer); err != nil {
-			return err
-		}
-
-		if err := startHTTPServerAndWait(simpleServer); err != nil {
-			return err
-		}
-
-		glog.Infof("Shutting down initiated")
-		simpleServer.Shutdown()
-		return nil
+		glog.Infof("SimpleServer starting to listen in port %v", httpdConf.Port)
+		return httpdConf.Start(sideCarConfigFile)
 	},
-}
-
-func addRoutes(simpleServer httpd.SimpleServer) error {
-	mutator, err := routes.NewMutatorController(sideCarConfigFile)
-	if err != nil {
-		return err
-	}
-
-	simpleServer.AddRoute("/mutate", mutator.Mutate)
-	return nil
-}
-
-func startHTTPServerAndWait(simpleServer httpd.SimpleServer) error {
-	glog.Infof("SimpleServer starting to listen in port %v", simpleServer.Port())
-
-	return simpleServer.Start()
 }
 
 func Execute() {
