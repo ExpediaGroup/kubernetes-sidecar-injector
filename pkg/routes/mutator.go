@@ -9,7 +9,7 @@ import (
 	"net/http"
 
 	"github.com/ghodss/yaml"
-	"github.com/golang/glog"
+	log "github.com/sirupsen/logrus"
 )
 
 /*SideCars is an array of named SideCar instances*/
@@ -28,7 +28,7 @@ func loadConfig(sideCarConfigFile string) (map[string]*webhook.SideCar, error) {
 	if err != nil {
 		return nil, err
 	}
-	glog.Infof("New sideCar configuration: %s", data)
+	log.Infof("New sideCar configuration: %s", data)
 
 	var cfg SideCars
 	if err := yaml.Unmarshal(data, &cfg); err != nil {
@@ -101,11 +101,11 @@ func readRequestBody(r *http.Request) ([]byte, error) {
 		return nil, fmt.Errorf("received Content-Type=%s, Expected Content-Type is 'application/json'", contentType)
 	}
 
-	glog.Infof("Request received  : \n %s \n", string(body))
+	log.Infof("Request received  : \n %s \n", string(body))
 	return body, nil
 }
 
 func writeError(writer http.ResponseWriter, message string, status int) {
-	glog.Errorf(message)
+	log.Errorf(message)
 	http.Error(writer, message, status)
 }
