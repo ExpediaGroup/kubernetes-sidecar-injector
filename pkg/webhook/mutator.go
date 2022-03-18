@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/golang/glog"
+	log "github.com/sirupsen/logrus"
 	"k8s.io/api/admission/v1beta1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -82,7 +82,7 @@ func (mutator Mutator) Mutate(req []byte) ([]byte, error) {
 func mutate(ar *v1beta1.AdmissionReview, sideCars map[string]*SideCar) *v1beta1.AdmissionResponse {
 	req := ar.Request
 
-	glog.Infof("AdmissionReview for Kind=%v, Namespace=%v Name=%v UID=%v patchOperation=%v UserInfo=%v",
+	log.Infof("AdmissionReview for Kind=%v, Namespace=%v Name=%v UID=%v patchOperation=%v UserInfo=%v",
 		req.Kind, req.Namespace, req.Name, req.UID, req.Operation, req.UserInfo)
 
 	pod, err := unMarshall(req)
@@ -97,7 +97,7 @@ func mutate(ar *v1beta1.AdmissionReview, sideCars map[string]*SideCar) *v1beta1.
 			return errorResponse(req.UID, err)
 		}
 
-		glog.Infof("AdmissionResponse: Patch: %v\n", string(patchBytes))
+		log.Infof("AdmissionResponse: Patch: %v\n", string(patchBytes))
 		pt := v1beta1.PatchTypeJSONPatch
 		return &v1beta1.AdmissionResponse{
 			UID:       req.UID,
@@ -113,7 +113,7 @@ func mutate(ar *v1beta1.AdmissionReview, sideCars map[string]*SideCar) *v1beta1.
 }
 
 func errorResponse(uid types.UID, err error) *v1beta1.AdmissionResponse {
-	glog.Errorf("AdmissionReview failed : [%v] %s", uid, err)
+	log.Errorf("AdmissionReview failed : [%v] %s", uid, err)
 	return &v1beta1.AdmissionResponse{
 		Result: &metav1.Status{
 			Message: err.Error(),
@@ -130,7 +130,7 @@ func unMarshall(req *v1beta1.AdmissionRequest) (corev1.Pod, error) {
 func shouldMutate(ignoredList []string, metadata *metav1.ObjectMeta) ([]string, bool) {
 	for _, namespace := range ignoredList {
 		if metadata.Namespace == namespace {
-			glog.Infof("Skipping mutation for [%v] in special namespace: [%v]", metadata.Name, metadata.Namespace)
+			log.Infof("Skipping mutation for [%v] in special namespace: [%v]", metadata.Name, metadata.Namespace)
 			return nil, false
 		}
 	}
@@ -141,7 +141,7 @@ func shouldMutate(ignoredList []string, metadata *metav1.ObjectMeta) ([]string, 
 	}
 
 	if status, ok := annotations[sideCarInjectionStatusAnnotation]; ok && strings.ToLower(status) == injectedValue {
-		glog.Infof("Skipping mutation for [%v]. Has been mutated already", metadata.Name)
+		log.Infof("Skipping mutation for [%v]. Has been mutated already", metadata.Name)
 		return nil, false
 	}
 
@@ -152,20 +152,20 @@ func shouldMutate(ignoredList []string, metadata *metav1.ObjectMeta) ([]string, 
 		}
 
 		if len(parts) > 0 {
-			glog.Infof("sideCar injection for %v/%v: sidecars: %v", metadata.Namespace, metadata.Name, sidecars)
+			log.Infof("sideCar injection for %v/%v: sidecars: %v", metadata.Namespace, metadata.Name, sidecars)
 			return parts, true
 		}
 	}
 
-	glog.Infof("Skipping mutation for [%v]. No action required", metadata.Name)
+	log.Infof("Skipping mutation for [%v]. No action required", metadata.Name)
 	return nil, false
 }
 
 func createPatch(pod *corev1.Pod, sideCarNames []string, sideCars map[string]*SideCar, annotations map[string]string) ([]byte, error) {
 
 	var patch []patchOperation
-	var containers       []corev1.Container
-	var volumes          []corev1.Volume
+	var containers []corev1.Container
+	var volumes []corev1.Volume
 	var imagePullSecrets []corev1.LocalObjectReference
 	count := 0
 
