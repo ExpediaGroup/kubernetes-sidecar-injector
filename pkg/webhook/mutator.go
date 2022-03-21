@@ -3,6 +3,7 @@ package webhook
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/expediagroup/kubernetes-sidecar-injector/pkg/admission"
 	"strings"
 
 	log "github.com/sirupsen/logrus"
@@ -32,12 +33,6 @@ const (
 	sideCarInjectionStatusAnnotation = sideCarNameSpace + statusAnnotation
 	injectedValue                    = "injected"
 )
-
-type patchOperation struct {
-	Op    string      `json:"op"`
-	Path  string      `json:"path"`
-	Value interface{} `json:"value,omitempty"`
-}
 
 /*SideCar is the template of the sidecar to be implemented*/
 type SideCar struct {
@@ -161,9 +156,8 @@ func shouldMutate(ignoredList []string, metadata *metav1.ObjectMeta) ([]string, 
 	return nil, false
 }
 
-func createPatch(pod *corev1.Pod, sideCarNames []string, sideCars map[string]*SideCar, annotations map[string]string) ([]byte, error) {
-
-	var patch []patchOperation
+func CreateRawPatch(pod *corev1.Pod, sideCarNames []string, sideCars map[string]*SideCar, annotations map[string]string) ([]admission.PatchOperation, error) {
+	var patch []admission.PatchOperation
 	var containers []corev1.Container
 	var volumes []corev1.Volume
 	var imagePullSecrets []corev1.LocalObjectReference
@@ -196,14 +190,21 @@ func createPatch(pod *corev1.Pod, sideCarNames []string, sideCars map[string]*Si
 		patch = append(patch, addImagePullSecrets(pod.Spec.ImagePullSecrets, imagePullSecrets, "/spec/imagePullSecrets")...)
 		patch = append(patch, updateAnnotation(pod.Annotations, annotations)...)
 
-		return json.Marshal(patch)
+		return patch, nil
 	}
-
-	return nil, fmt.Errorf("Did not find one or more sidecars to inject %v", sideCarNames)
+	return nil, fmt.Errorf("did not find one or more sidecars to inject %v", sideCarNames)
 }
 
-func addContainer(target, added []corev1.Container, basePath string) []patchOperation {
-	var patch []patchOperation
+func createPatch(pod *corev1.Pod, sideCarNames []string, sideCars map[string]*SideCar, annotations map[string]string) ([]byte, error) {
+	if patch, err := CreateRawPatch(pod, sideCarNames, sideCars, annotations); err != nil {
+		return nil, err
+	} else {
+		return json.Marshal(patch)
+	}
+}
+
+func addContainer(target, added []corev1.Container, basePath string) []admission.PatchOperation {
+	var patch []admission.PatchOperation
 	first := len(target) == 0
 	var value interface{}
 	for _, add := range added {
@@ -215,7 +216,7 @@ func addContainer(target, added []corev1.Container, basePath string) []patchOper
 		} else {
 			path = path + "/-"
 		}
-		patch = append(patch, patchOperation{
+		patch = append(patch, admission.PatchOperation{
 			Op:    "add",
 			Path:  path,
 			Value: value,
@@ -224,8 +225,8 @@ func addContainer(target, added []corev1.Container, basePath string) []patchOper
 	return patch
 }
 
-func addVolume(target, added []corev1.Volume, basePath string) []patchOperation {
-	var patch []patchOperation
+func addVolume(target, added []corev1.Volume, basePath string) []admission.PatchOperation {
+	var patch []admission.PatchOperation
 	first := len(target) == 0
 	var value interface{}
 	for _, add := range added {
@@ -237,7 +238,7 @@ func addVolume(target, added []corev1.Volume, basePath string) []patchOperation 
 		} else {
 			path = path + "/-"
 		}
-		patch = append(patch, patchOperation{
+		patch = append(patch, admission.PatchOperation{
 			Op:    "add",
 			Path:  path,
 			Value: value,
@@ -246,8 +247,8 @@ func addVolume(target, added []corev1.Volume, basePath string) []patchOperation 
 	return patch
 }
 
-func addImagePullSecrets(target, added []corev1.LocalObjectReference, basePath string) []patchOperation {
-	var patch []patchOperation
+func addImagePullSecrets(target, added []corev1.LocalObjectReference, basePath string) []admission.PatchOperation {
+	var patch []admission.PatchOperation
 	first := len(target) == 0
 	var value interface{}
 	for _, add := range added {
@@ -259,7 +260,7 @@ func addImagePullSecrets(target, added []corev1.LocalObjectReference, basePath s
 		} else {
 			path = path + "/-"
 		}
-		patch = append(patch, patchOperation{
+		patch = append(patch, admission.PatchOperation{
 			Op:    "add",
 			Path:  path,
 			Value: value,
@@ -268,21 +269,21 @@ func addImagePullSecrets(target, added []corev1.LocalObjectReference, basePath s
 	return patch
 }
 
-func updateAnnotation(target map[string]string, added map[string]string) []patchOperation {
-	var patch []patchOperation
+func updateAnnotation(target map[string]string, added map[string]string) []admission.PatchOperation {
+	var patch []admission.PatchOperation
 	if target == nil {
 		target = map[string]string{}
 	}
 	for key, value := range added {
 		_, ok := target[key]
 		if ok {
-			patch = append(patch, patchOperation{
+			patch = append(patch, admission.PatchOperation{
 				Op:    "replace",
 				Path:  "/metadata/annotations/" + key,
 				Value: value,
 			})
 		} else {
-			patch = append(patch, patchOperation{
+			patch = append(patch, admission.PatchOperation{
 				Op:   "add",
 				Path: "/metadata/annotations",
 				Value: map[string]string{

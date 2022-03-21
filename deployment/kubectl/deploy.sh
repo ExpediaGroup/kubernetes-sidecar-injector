@@ -14,7 +14,7 @@ file-check-and-apply() {
     kubectl apply -f $1
 }
 
-BASEDIR=`dirname $0`
+BASEDIR=$(dirname "$0")
 
 # ensure kubectl
 if [[ ! "$(command -v kubectl)" ]]; then
