@@ -15,8 +15,7 @@ data:
   cert.pem: {{ b64enc $cert.Cert }}
   key.pem: {{ b64enc $cert.Key }}
 ---
-{{/*apiVersion: admissionregistration.k8s.io/v1*/}}
-apiVersion: admissionregistration.k8s.io/v1beta1
+apiVersion: admissionregistration.k8s.io/v1
 kind: MutatingWebhookConfiguration
 metadata:
   name: {{ .Release.Name }}
@@ -31,9 +30,9 @@ webhooks:
         path: "/mutate"
       caBundle: {{ b64enc $ca.Cert }}
     failurePolicy: Fail
-{{/*    sideEffects: None*/}}
-{{/*    admissionReviewVersions:*/}}
-{{/*      - v1*/}}
+    sideEffects: None
+    admissionReviewVersions:
+      - v1
     rules:
       - apiGroups:
           - ""

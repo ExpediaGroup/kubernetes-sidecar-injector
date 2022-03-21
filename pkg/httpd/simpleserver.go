@@ -2,12 +2,14 @@ package httpd
 
 import (
 	"fmt"
-	"github.com/expediagroup/kubernetes-sidecar-injector/pkg/routes"
+	"github.com/expediagroup/kubernetes-sidecar-injector/pkg/admission"
+	"github.com/expediagroup/kubernetes-sidecar-injector/pkg/webhook"
 	"net/http"
 )
 
 /*SimpleServer is the required config to create httpd server*/
 type SimpleServer struct {
+	Local    bool
 	Port     int
 	CertFile string
 	KeyFile  string
@@ -22,11 +24,20 @@ func (conf *SimpleServer) Start(sideCarConfigFile string) error {
 	mux := http.NewServeMux()
 	server.Handler = mux
 
-	if mutator, err := routes.NewMutatorController(sideCarConfigFile); err != nil {
+	patcher, err := webhook.NewSidecarInjectorPatcher(sideCarConfigFile)
+	if err != nil {
 		return err
-	} else {
-		mux.HandleFunc("/mutate", mutator.Mutate)
 	}
+	admissionHandler := &admission.Handler{
+		Handler: &admission.PodAdmissionRequestHandler{
+			PodHandler: patcher,
+		},
+	}
+	mux.HandleFunc("/mutate", admissionHandler.HandleAdmission)
 
-	return server.ListenAndServeTLS(conf.CertFile, conf.KeyFile)
+	if conf.Local {
+		return server.ListenAndServe()
+	} else {
+		return server.ListenAndServeTLS(conf.CertFile, conf.KeyFile)
+	}
 }
