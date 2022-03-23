@@ -8,8 +8,7 @@ import (
 )
 
 var (
-	httpdConf         httpd.SimpleServer
-	sideCarConfigFile string
+	httpdConf httpd.SimpleServer
 )
 
 var rootCmd = &cobra.Command{
@@ -17,7 +16,7 @@ var rootCmd = &cobra.Command{
 	Short: "Responsible for injecting sidecars into pod containers",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		log.Infof("SimpleServer starting to listen in port %v", httpdConf.Port)
-		return httpdConf.Start(sideCarConfigFile)
+		return httpdConf.Start()
 	},
 }
 
@@ -33,5 +32,7 @@ func init() {
 	rootCmd.Flags().StringVar(&httpdConf.CertFile, "certFile", "/etc/mutator/certs/cert.pem", "File containing tls certificate")
 	rootCmd.Flags().StringVar(&httpdConf.KeyFile, "keyFile", "/etc/mutator/certs/key.pem", "File containing tls private key")
 	rootCmd.Flags().BoolVar(&httpdConf.Local, "local", false, "Local run mode")
-	rootCmd.Flags().StringVar(&sideCarConfigFile, "sideCar", "/etc/mutator/sidecar.yaml", "File containing sidecar template")
+	rootCmd.Flags().StringVar(&httpdConf.Patcher.InjectPrefix, "injectPrefix", "sidecar-injector.expedia.com", "Injector Prefix")
+	rootCmd.Flags().StringVar(&httpdConf.Patcher.InjectName, "injectPrefix", "inject", "Injector Name")
+	rootCmd.Flags().StringVar(&httpdConf.Patcher.SidecarDataKey, "sidecarDataKey", "sidecars.yaml", "ConfigMap Sidecar Data Key")
 }

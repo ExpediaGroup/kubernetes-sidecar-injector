@@ -42,9 +42,34 @@ webhooks:
           - "*"
         operations:
           - CREATE
+        scope: Namespaced
     namespaceSelector:
+      matchExpressions:
+        {{- with .Values.selectors.namespaceSelector.matchExpressions }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+        - key: {{ .Values.selectors.injectPrefix }}/{{ .Values.selectors.disableInjectLabel }}
+          operator: NotIn
+          values:
+            - "true"
+        - key: name
+          operator: NotIn
+          values:
+            - {{ .Release.Namespace }}
+    objectSelector:
+      {{- with .Values.selectors.objectSelector.matchLabels }}
       matchLabels:
-        kubernetes-sidecar-injector: enabled
+      {{- toYaml . | nindent 8 }}
+      {{- end }}
+      matchExpressions:
+        - key: {{ .Values.selectors.injectPrefix }}/{{ .Values.selectors.injectName }}
+          operator: NotIn
+          values:
+            - skip
+        - key: {{ .Values.selectors.injectPrefix }}/{{ .Values.selectors.disableInjectLabel }}
+          operator: NotIn
+          values:
+            - "true"
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -73,7 +98,9 @@ spec:
             - --port=8443
             - --certFile=/opt/kubernetes-sidecar-injector/certs/cert.pem
             - --keyFile=/opt/kubernetes-sidecar-injector/certs/key.pem
-            - --sideCar=/opt/kubernetes-sidecar-injector/sidecarconfig.yaml
+            - --injectPrefix={{ trimSuffix "/" .Values.selectors.injectPrefix }}
+            - --injectPrefix={{ .Values.selectors.injectName }}
+            - --sidecarDataKey={{ .Values.sidecars.dataKey }}
           volumeMounts:
             - name: {{ .Release.Name }}-certs
               mountPath: /opt/kubernetes-sidecar-injector/certs

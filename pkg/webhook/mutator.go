@@ -36,10 +36,19 @@ const (
 
 /*SideCar is the template of the sidecar to be implemented*/
 type SideCar struct {
+	Name             string                        `yaml:"name"`
 	Containers       []corev1.Container            `yaml:"containers"`
 	Volumes          []corev1.Volume               `yaml:"volumes"`
 	ImagePullSecrets []corev1.LocalObjectReference `yaml:"imagePullSecrets"`
 }
+
+//func (sidecar *SideCar) isEmpty() bool {
+//	return len(sidecar.Containers)+len(sidecar.Volumes)+len(sidecar.ImagePullSecrets) <= 0
+//}
+//
+//func (sidecar *SideCar) toPatchOp() bool {
+//	return len(sidecar.Containers)+len(sidecar.Volumes)+len(sidecar.ImagePullSecrets) <= 0
+//}
 
 /*Mutator is the interface for mutating webhook*/
 type Mutator struct {

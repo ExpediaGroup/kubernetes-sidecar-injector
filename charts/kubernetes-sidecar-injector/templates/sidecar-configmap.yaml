@@ -4,27 +4,25 @@ metadata:
   name: kubernetes-sidecars-configmap
 data:
   sidecarconfig.yaml: |
-    sidecars:
-      - name: haystack-agent
-        sidecar:
-          containers:
-            - name: haystack-agent
-              image: expediagroup/haystack-agent
-              imagePullPolicy: IfNotPresent
-              args:
-                - --config-provider
-                - file
-                - --file-path
-                - /app/haystack/agent.conf
-              ports:
-                - containerPort: 35000
-              volumeMounts:
-                - name: agent-conf
-                  mountPath: /app/haystack
-          volumes:
+    - name: haystack-agent
+      containers:
+        - name: haystack-agent
+          image: expediagroup/haystack-agent
+          imagePullPolicy: IfNotPresent
+          args:
+            - --config-provider
+            - file
+            - --file-path
+            - /app/haystack/agent.conf
+          ports:
+            - containerPort: 35000
+          volumeMounts:
             - name: agent-conf
-              configMap:
-                name: haystack-agent-conf-configmap
+              mountPath: /app/haystack
+      volumes:
+        - name: agent-conf
+          configMap:
+            name: haystack-agent-conf-configmap
 
 ---
 apiVersion: v1

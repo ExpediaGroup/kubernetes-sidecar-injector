@@ -13,10 +13,11 @@ type SimpleServer struct {
 	Port     int
 	CertFile string
 	KeyFile  string
+	Patcher  webhook.SidecarInjectorPatcher
 }
 
 /*Start the simple http server supporting TLS*/
-func (conf *SimpleServer) Start(sideCarConfigFile string) error {
+func (conf *SimpleServer) Start() error {
 	server := &http.Server{
 		Addr: fmt.Sprintf(":%d", conf.Port),
 	}
@@ -24,13 +25,9 @@ func (conf *SimpleServer) Start(sideCarConfigFile string) error {
 	mux := http.NewServeMux()
 	server.Handler = mux
 
-	patcher, err := webhook.NewSidecarInjectorPatcher(sideCarConfigFile)
-	if err != nil {
-		return err
-	}
 	admissionHandler := &admission.Handler{
 		Handler: &admission.PodAdmissionRequestHandler{
-			PodHandler: patcher,
+			PodHandler: &conf.Patcher,
 		},
 	}
 	mux.HandleFunc("/mutate", admissionHandler.HandleAdmission)
