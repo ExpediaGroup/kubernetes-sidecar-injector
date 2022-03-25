@@ -24,5 +24,5 @@ make helm-install
 
 2. By default, all namespaces are watched except `kube-system` and `kube-public`. This can be configured in your [helm values](charts/kubernetes-sidecar-injector/values.yaml#L13-L19).
 
-3. Add the annotation ([`sidecar-injector.expedia.com/inject`](charts/kubernetes-sidecar-injector/values.yaml#L9-L10) by default) with ConfigMap sidecar name to inject in pod spec where sidecar needs to be injected. [This sample spec](sample/chart/echo-server/templates/echo-server.yaml#L16) shows such an annotation added to a pod spec to inject `haystack-agent`.
+3. Add the annotation ([`sidecar-injector.expedia.com/inject`](charts/kubernetes-sidecar-injector/values.yaml#L9-L10) by default) with ConfigMap sidecar name to inject in pod spec where sidecar needs to be injected. [This sample spec](sample/chart/echo-server/templates/deployment.yaml#L16) shows such an annotation added to a pod spec to inject `haystack-agent`.
 

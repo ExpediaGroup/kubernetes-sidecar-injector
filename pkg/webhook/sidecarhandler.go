@@ -15,6 +15,7 @@ import (
 
 type SideCar struct {
 	Name             string                        `yaml:"name"`
+	InitContainers   []corev1.Container            `yaml:"initContainers"`
 	Containers       []corev1.Container            `yaml:"containers"`
 	Volumes          []corev1.Volume               `yaml:"volumes"`
 	ImagePullSecrets []corev1.LocalObjectReference `yaml:"imagePullSecrets"`
@@ -91,6 +92,7 @@ func (patcher *SidecarInjectorPatcher) PatchPodCreate(namespace string, pod core
 				}
 				if sidecars != nil {
 					for _, sidecar := range sidecars {
+						patches = append(patches, createPatches(sidecar.InitContainers, pod.Spec.InitContainers, "/spec/initContainers")...)
 						patches = append(patches, createPatches(sidecar.Containers, pod.Spec.Containers, "/spec/containers")...)
 						patches = append(patches, createPatches(sidecar.Volumes, pod.Spec.Volumes, "/spec/volumes")...)
 						patches = append(patches, createPatches(sidecar.ImagePullSecrets, pod.Spec.ImagePullSecrets, "/spec/imagePullSecrets")...)

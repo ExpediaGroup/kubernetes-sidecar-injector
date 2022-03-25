@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Chart.Name }}-sidecar
+  namespace: {{ .Release.Namespace }}
+data:
+  sidecars.yaml: |
+    - name: busybox
+      initContainers:
+        - name: busybox
+          image: busybox
+          command: [ "/bin/sh" ]
+          args: [ "-c", "echo '<html><h1>I am an init container injected by the sidcar-injector!</h1><html>' >> /work-dir/index.html" ]
+          volumeMounts:
+            - name: workdir
+              mountPath: "/work-dir"
