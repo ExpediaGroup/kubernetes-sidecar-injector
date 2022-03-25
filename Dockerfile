@@ -1,5 +1,5 @@
-FROM golang:1.16 as build
-RUN go get -u golang.org/x/lint/golint
+FROM golang:1.18 as build
+RUN go install golang.org/x/lint/golint@latest
 WORKDIR /build
 COPY . ./
 RUN make release

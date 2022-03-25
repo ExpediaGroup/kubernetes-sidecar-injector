@@ -1,9 +1,10 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: kubernetes-sidecars-configmap
+  name: haystack-agent-sidecar
+  namespace: {{ .Release.Namespace}}
 data:
-  sidecarconfig.yaml: |
+  sidecars.yaml: |
     - name: haystack-agent
       containers:
         - name: haystack-agent
@@ -29,6 +30,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: haystack-agent-conf-configmap
+  namespace: {{ .Release.Namespace}}
 data:
   agent.conf: |
     agents {

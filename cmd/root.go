@@ -15,6 +15,7 @@ var rootCmd = &cobra.Command{
 	Use:   "kubernetes-sidecar-injector",
 	Short: "Responsible for injecting sidecars into pod containers",
 	RunE: func(cmd *cobra.Command, args []string) error {
+
 		log.Infof("SimpleServer starting to listen in port %v", httpdConf.Port)
 		return httpdConf.Start()
 	},
@@ -32,7 +33,7 @@ func init() {
 	rootCmd.Flags().StringVar(&httpdConf.CertFile, "certFile", "/etc/mutator/certs/cert.pem", "File containing tls certificate")
 	rootCmd.Flags().StringVar(&httpdConf.KeyFile, "keyFile", "/etc/mutator/certs/key.pem", "File containing tls private key")
 	rootCmd.Flags().BoolVar(&httpdConf.Local, "local", false, "Local run mode")
-	rootCmd.Flags().StringVar(&httpdConf.Patcher.InjectPrefix, "injectPrefix", "sidecar-injector.expedia.com", "Injector Prefix")
-	rootCmd.Flags().StringVar(&httpdConf.Patcher.InjectName, "injectPrefix", "inject", "Injector Name")
-	rootCmd.Flags().StringVar(&httpdConf.Patcher.SidecarDataKey, "sidecarDataKey", "sidecars.yaml", "ConfigMap Sidecar Data Key")
+	rootCmd.Flags().StringVar(&(&httpdConf.Patcher).InjectPrefix, "injectPrefix", "sidecar-injector.expedia.com", "Injector Prefix")
+	rootCmd.Flags().StringVar(&(&httpdConf.Patcher).InjectName, "injectName", "inject", "Injector Name")
+	rootCmd.Flags().StringVar(&(&httpdConf.Patcher).SidecarDataKey, "sidecarDataKey", "sidecars.yaml", "ConfigMap Sidecar Data Key")
 }

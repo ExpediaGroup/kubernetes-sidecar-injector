@@ -90,6 +90,7 @@ spec:
       annotations:
         generated-cert: {{ sha256sum $cert.Cert }}
     spec:
+      serviceAccountName: {{ include "serviceaccount.name" . }}
       containers:
         - name: kubernetes-sidecar-injector
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
@@ -99,18 +100,13 @@ spec:
             - --certFile=/opt/kubernetes-sidecar-injector/certs/cert.pem
             - --keyFile=/opt/kubernetes-sidecar-injector/certs/key.pem
             - --injectPrefix={{ trimSuffix "/" .Values.selectors.injectPrefix }}
-            - --injectPrefix={{ .Values.selectors.injectName }}
+            - --injectName={{ .Values.selectors.injectName }}
             - --sidecarDataKey={{ .Values.sidecars.dataKey }}
           volumeMounts:
             - name: {{ .Release.Name }}-certs
               mountPath: /opt/kubernetes-sidecar-injector/certs
               readOnly: true
-            - name: {{ .Release.Name }}-configmap
-              mountPath: /opt/kubernetes-sidecar-injector
       volumes:
         - name: {{ .Release.Name }}-certs
           secret:
             secretName: {{ include "certs.secret.name" . }}
-        - name: {{ .Release.Name }}-configmap
-          configMap:
-            name: kubernetes-sidecars-configmap
