@@ -34,5 +34,8 @@ helm-install:
 
 kind-install: kind-load helm-install
 
-install-sample:
-	helm upgrade -i sample-echo-server-sidecar-injector ./sample/chart/echo-server/. --namespace=sample --create-namespace
+install-sample-container:
+	helm upgrade -i inject-container ./sample/chart/echo-server/. --namespace=sample --create-namespace
+
+install-sample-init-container:
+	helm upgrade -i inject-init-container ./sample/chart/nginx/. --namespace=sample --create-namespace

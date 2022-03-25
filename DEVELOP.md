@@ -43,7 +43,7 @@ kubernetes-sidecar-injector-78648d458b-7cv7l   1/1     Running   0          32m
 
 ### Test the webhook
 
-Run the following command to deploy a sample `echo-server`. Note, this [deployment spec carries an annotation](sample/chart/echo-server/templates/echo-server.yaml#L16) `sidecar-injector.expedia.com/inject: "haystack-agent"` that triggers injection of `haystack-agent` sidecar defined in [sidecar-configmap.yaml](sample/chart/echo-server/templates/sidecar-configmap.yaml) file.
+Run the following command to deploy a sample `echo-server`. Note, this [deployment spec carries an annotation](sample/chart/echo-server/templates/deployment.yaml#L16) `sidecar-injector.expedia.com/inject: "haystack-agent"` that triggers injection of `haystack-agent` sidecar defined in [sidecar-configmap.yaml](sample/chart/echo-server/templates/sidecar-configmap.yaml) file.
 
 ```bash
 make install-sample

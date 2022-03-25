@@ -1,4 +1,4 @@
-name: inject-container
+name: inject-init-container
 home: https://github.com/expediagroup/kubernetes-sidecar-injector
 version: 0.0.1
 appVersion: "0.1"
