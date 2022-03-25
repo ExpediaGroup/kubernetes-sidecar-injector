@@ -2,6 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: echo-server-deployment
+  namespace: {{ .Release.Namespace }}
   labels:
     app.kubernetes.io/name: echo-server
 spec:
@@ -12,7 +13,7 @@ spec:
   template:
     metadata:
       annotations:
-        sidecar-injector.expedia.com/inject: "haystack-agent"
+        sidecar-injector.expedia.com/inject: "haystack-agent-sidecar"
         sidecar-injector.expedia.com/some-api-key: "6feab492-fc9b-4c38-b50d-3791718c8203"
       labels:
         app.kubernetes.io/name: echo-server

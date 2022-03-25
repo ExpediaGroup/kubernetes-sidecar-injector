@@ -5,7 +5,7 @@ import (
 )
 
 type PodPatcher interface {
-	PatchPodCreate(pod corev1.Pod) ([]PatchOperation, error)
-	PatchPodUpdate(oldPod corev1.Pod, newPod corev1.Pod) ([]PatchOperation, error)
-	PatchPodDelete(pod corev1.Pod) ([]PatchOperation, error)
+	PatchPodCreate(namespace string, pod corev1.Pod) ([]PatchOperation, error)
+	PatchPodUpdate(namespace string, oldPod corev1.Pod, newPod corev1.Pod) ([]PatchOperation, error)
+	PatchPodDelete(namespace string, pod corev1.Pod) ([]PatchOperation, error)
 }

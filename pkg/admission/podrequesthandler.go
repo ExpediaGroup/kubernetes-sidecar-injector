@@ -15,7 +15,7 @@ func (handler *PodAdmissionRequestHandler) handleAdmissionCreate(request *admiss
 	if pod, err := unmarshalPod(request.Object.Raw); err != nil {
 		return nil, err
 	} else {
-		return handler.PodHandler.PatchPodCreate(pod)
+		return handler.PodHandler.PatchPodCreate(request.Namespace, pod)
 	}
 }
 
@@ -27,7 +27,7 @@ func (handler *PodAdmissionRequestHandler) handleAdmissionUpdate(request *admiss
 	if newPod, err := unmarshalPod(request.Object.Raw); err != nil {
 		return nil, err
 	} else {
-		return handler.PodHandler.PatchPodUpdate(oldPod, newPod)
+		return handler.PodHandler.PatchPodUpdate(request.Namespace, oldPod, newPod)
 	}
 }
 
@@ -35,7 +35,7 @@ func (handler *PodAdmissionRequestHandler) handleAdmissionDelete(request *admiss
 	if pod, err := unmarshalPod(request.OldObject.Raw); err != nil {
 		return nil, err
 	} else {
-		return handler.PodHandler.PatchPodDelete(pod)
+		return handler.PodHandler.PatchPodDelete(request.Namespace, pod)
 	}
 }
 

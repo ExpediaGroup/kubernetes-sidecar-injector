@@ -1,3 +1,19 @@
 image:
   repository: expediagroup/kubernetes-sidecar-injector
   tag: latest
+
+sidecars:
+  dataKey: sidecars.yaml
+
+selectors:
+  injectPrefix: sidecar-injector.expedia.com
+  injectName: inject
+  disableInjectLabel: disable-inject
+  objectSelector: {}
+  namespaceSelector:
+    matchExpressions:
+      - key: name
+        operator: NotIn
+        values:
+          - kube-system
+          - kube-public

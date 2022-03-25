@@ -26,6 +26,13 @@ release: clean vet lint
 docker:
 	docker build --no-cache -t ${CONTAINER_NAME}:${IMAGE_TAG} .
 
-kind-install: docker
+kind-load: docker
 	kind load docker-image ${CONTAINER_NAME}:${IMAGE_TAG} --name ${KIND_CLUSTER}
+
+helm-install:
 	helm upgrade -i kubernetes-sidecar-injector ./charts/kubernetes-sidecar-injector/. --namespace=kubernetes-sidecar-injector --create-namespace --set image.tag=${IMAGE_TAG}
+
+kind-install: kind-load helm-install
+
+install-sample:
+	helm upgrade -i sample-echo-server-sidecar-injector ./sample/chart/echo-server/. --namespace=sample --create-namespace

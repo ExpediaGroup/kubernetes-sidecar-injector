@@ -11,3 +11,15 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- define "service.name" }}
 {{- .Release.Name }}
 {{- end }}
+
+{{- define "serviceaccount.name" }}
+{{- .Release.Name }}
+{{- end }}
+
+{{- define "clusterrole.name" }}
+{{- .Release.Name }}
+{{- end }}
+
+{{- define "clusterrolebinding.name" }}
+{{- .Release.Name }}
+{{- end }}

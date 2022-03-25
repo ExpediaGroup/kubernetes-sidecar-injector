@@ -1,0 +1,49 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: haystack-agent-sidecar
+  namespace: {{ .Release.Namespace}}
+data:
+  sidecars.yaml: |
+    - name: haystack-agent
+      containers:
+        - name: haystack-agent
+          image: expediagroup/haystack-agent
+          imagePullPolicy: IfNotPresent
+          args:
+            - --config-provider
+            - file
+            - --file-path
+            - /app/haystack/agent.conf
+          ports:
+            - containerPort: 35000
+          volumeMounts:
+            - name: agent-conf
+              mountPath: /app/haystack
+      volumes:
+        - name: agent-conf
+          configMap:
+            name: haystack-agent-conf-configmap
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: haystack-agent-conf-configmap
+  namespace: {{ .Release.Namespace}}
+data:
+  agent.conf: |
+    agents {
+      spans {
+        enabled = true
+        port = 35000
+        dispatchers {
+          kafka {
+            bootstrap.servers = "kafkasvc:9092"
+            producerTopic = "proto-spans"
+            buffer.memory = 1048576
+            retries = 2
+          }
+        }
+      }
+    }
