@@ -20,12 +20,6 @@ type SideCar struct {
 	ImagePullSecrets []corev1.LocalObjectReference `yaml:"imagePullSecrets"`
 }
 
-/*InjectSideCar is a named sidecar to be injected*/
-type InjectSideCar struct {
-	Name    string  `yaml:"name"`
-	Sidecar SideCar `yaml:"sidecar"`
-}
-
 type SidecarInjectorPatcher struct {
 	K8sClient      kubernetes.Interface
 	InjectPrefix   string
@@ -63,15 +57,14 @@ func (patcher *SidecarInjectorPatcher) configmapSidecarNames(namespace string, p
 func createPatches[T any](newCollection []T, existingCollection []T, path string) []admission.PatchOperation {
 	var patches []admission.PatchOperation
 	for index, item := range newCollection {
+		var value interface{}
 		first := index == 0 && len(existingCollection) == 0
 		if !first {
 			path = path + "/-"
-		}
-		var value interface{}
-		if first {
+			value = item
+		} else {
 			value = []T{item}
 		}
-		value = item
 		patches = append(patches, admission.PatchOperation{
 			Op:    "add",
 			Path:  path,
