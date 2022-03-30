@@ -2,6 +2,9 @@ image:
   repository: expediagroup/kubernetes-sidecar-injector
   tag: latest
 
+podAnnotations: {}
+podLabels: {}
+
 sidecars:
   dataKey: sidecars.yaml
 

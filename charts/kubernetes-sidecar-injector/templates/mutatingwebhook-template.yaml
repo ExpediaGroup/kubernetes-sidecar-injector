@@ -85,10 +85,16 @@ spec:
       {{- include "common.labels" . | indent 6 }}
   template:
     metadata:
-      labels:
-        {{- include "common.labels" . | indent 8 }}
       annotations:
         generated-cert: {{ sha256sum $cert.Cert }}
+        {{- with .Values.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      labels:
+        {{- include "common.labels" . | indent 8 }}
+        {{- with .Values.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
     spec:
       serviceAccountName: {{ include "serviceaccount.name" . }}
       containers:
