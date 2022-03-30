@@ -2,12 +2,8 @@ image:
   repository: expediagroup/kubernetes-sidecar-injector
   tag: latest
 
-deployment:
-  tpl: {} # template is a keyword
-#    annotations:
-#      test: test
-#    labels:
-#      test: test
+podAnnotations: {}
+podLabels: {}
 
 sidecars:
   dataKey: sidecars.yaml

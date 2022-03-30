@@ -85,14 +85,14 @@ spec:
       {{- include "common.labels" . | indent 6 }}
   template:
     metadata:
-      labels:
-        {{- include "common.labels" . | indent 8 }}
-        {{- with .Values.deployment.tpl.labels }}
-        {{- toYaml . | nindent 8 }}
-        {{- end }}
       annotations:
         generated-cert: {{ sha256sum $cert.Cert }}
-        {{- with .Values.deployment.tpl.annotations }}
+        {{- with .Values.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      labels:
+        {{- include "common.labels" . | indent 8 }}
+        {{- with .Values.podLabels }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
     spec:
