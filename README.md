@@ -74,4 +74,11 @@ data:
             - name: workdir
               mountPath: "/work-dir"
 ```
+## How to use the kubernetes-sidecar-injector Helm repository
 
+You need to add this repository to your Helm repositories:
+
+```
+helm repo add kubernetes-sidecar-injector  https://opensource.expediagroup.com/kubernetes-sidecar-injector/
+helm repo update
+```
