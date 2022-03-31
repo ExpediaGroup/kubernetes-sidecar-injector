@@ -17,9 +17,10 @@ spec:
       labels:
         app.kubernetes.io/name: {{ .Chart.Name }}
     spec:
+      serviceAccountName: {{ .Chart.Name }}
       containers:
         - name: nginx
-          image: nginx
+          image: nginx:1.20.2
           ports:
             - containerPort: 80
           volumeMounts:
