@@ -18,9 +18,10 @@ spec:
       labels:
         app.kubernetes.io/name: {{ .Chart.Name }}
     spec:
+      serviceAccountName: {{ .Chart.Name }}
       containers:
         - name: echo-server
-          image: hashicorp/http-echo
+          image: hashicorp/http-echo:0.2.3
           imagePullPolicy: IfNotPresent
           args:
             - -listen=:8080
