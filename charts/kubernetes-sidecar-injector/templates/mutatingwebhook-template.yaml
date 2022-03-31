@@ -52,7 +52,7 @@ webhooks:
           operator: NotIn
           values:
             - "true"
-        - key: name
+        - key: kubernetes.io/metadata.name
           operator: NotIn
           values:
             - {{ .Release.Namespace }}
