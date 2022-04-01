@@ -43,6 +43,7 @@ func (simpleServer *SimpleServer) Start() error {
 			PodHandler: &simpleServer.Patcher,
 		},
 	}
+	mux.HandleFunc("/healthz", webhook.HealthHandler)
 	mux.HandleFunc("/mutate", admissionHandler.HandleAdmission)
 
 	if simpleServer.Local {
