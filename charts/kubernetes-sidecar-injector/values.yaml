@@ -2,6 +2,14 @@ image:
   repository: expediagroup/kubernetes-sidecar-injector
   tag: latest
 
+replicaCount: 1
+
+service:
+  port: 443
+
+container:
+  port: 8443
+
 podAnnotations: {}
 podLabels: {}
 
