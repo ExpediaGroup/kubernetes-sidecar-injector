@@ -79,7 +79,7 @@ metadata:
   labels:
     {{- include "common.labels" . | indent 4 }}
 spec:
-  replicas: 1
+  replicas: {{ .Values.replicaCount }}
   selector:
     matchLabels:
       {{- include "common.labels" . | indent 6 }}
@@ -102,7 +102,7 @@ spec:
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: IfNotPresent
           args:
-            - --port=8443
+            - --port={{ .Values.container.port }}
             - --certFile=/opt/kubernetes-sidecar-injector/certs/cert.pem
             - --keyFile=/opt/kubernetes-sidecar-injector/certs/key.pem
             - --injectPrefix={{ trimSuffix "/" .Values.selectors.injectPrefix }}
@@ -112,6 +112,30 @@ spec:
             - name: {{ .Release.Name }}-certs
               mountPath: /opt/kubernetes-sidecar-injector/certs
               readOnly: true
+          ports:
+            - name: https
+              containerPort: {{ .Values.container.port }}
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: https
+              scheme: HTTPS
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            successThreshold: 1
+            failureThreshold: 5
+            timeoutSeconds: 4
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: https
+              scheme: HTTPS
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            successThreshold: 1
+            failureThreshold: 5
+            timeoutSeconds: 4
       volumes:
         - name: {{ .Release.Name }}-certs
           secret:
