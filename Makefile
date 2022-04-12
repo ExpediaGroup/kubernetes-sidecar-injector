@@ -30,7 +30,10 @@ kind-load: docker
 	kind load docker-image ${CONTAINER_NAME}:${IMAGE_TAG} --name ${KIND_CLUSTER}
 
 helm-install:
-	helm upgrade -i kubernetes-sidecar-injector ./charts/kubernetes-sidecar-injector/. --namespace=kubernetes-sidecar-injector --create-namespace --set image.tag=${IMAGE_TAG}
+	helm upgrade -i kubernetes-sidecar-injector ./charts/kubernetes-sidecar-injector/. --namespace=sidecar-injector --create-namespace --set image.tag=${IMAGE_TAG}
+
+helm-template:
+	helm template kubernetes-sidecar-injector ./charts/kubernetes-sidecar-injector
 
 kind-install: kind-load helm-install
 
