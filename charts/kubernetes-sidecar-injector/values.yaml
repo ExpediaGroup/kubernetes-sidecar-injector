@@ -1,6 +1,8 @@
 image:
   repository: expediagroup/kubernetes-sidecar-injector
   tag: latest
+  pullPolicy: IfNotPresent
+  pullSecrets: []
 
 replicaCount: 1
 

@@ -100,7 +100,7 @@ spec:
       containers:
         - name: kubernetes-sidecar-injector
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
-          imagePullPolicy: IfNotPresent
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
           args:
             - --port={{ .Values.container.port }}
             - --certFile=/opt/kubernetes-sidecar-injector/certs/cert.pem
@@ -136,6 +136,8 @@ spec:
             successThreshold: 1
             failureThreshold: 5
             timeoutSeconds: 4
+      imagePullSecrets:
+        {{- toYaml .Values.image.pullSecrets | nindent 8 }}
       volumes:
         - name: {{ .Release.Name }}-certs
           secret:
