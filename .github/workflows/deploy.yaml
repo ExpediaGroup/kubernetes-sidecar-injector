@@ -10,6 +10,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+      - name: Unit Test
+        run: make test
       - name: Construct PR Docker Tag
         if:  ${{ github.event_name == 'pull_request' }}
         id: pr_docker_tag

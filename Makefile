@@ -11,6 +11,12 @@ lint:
 vet:
 	go vet ./...
 
+test:
+	go test ./...
+
+tidy:
+	go mod tidy
+
 imports:
 	goimports -w ${SRC}
 

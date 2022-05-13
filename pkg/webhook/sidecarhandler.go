@@ -19,13 +19,15 @@ type SideCar struct {
 	Containers       []corev1.Container            `yaml:"containers"`
 	Volumes          []corev1.Volume               `yaml:"volumes"`
 	ImagePullSecrets []corev1.LocalObjectReference `yaml:"imagePullSecrets"`
+	Annotations      map[string]string             `yaml:"annotations"`
 }
 
 type SidecarInjectorPatcher struct {
-	K8sClient      kubernetes.Interface
-	InjectPrefix   string
-	InjectName     string
-	SidecarDataKey string
+	K8sClient                kubernetes.Interface
+	InjectPrefix             string
+	InjectName               string
+	SidecarDataKey           string
+	AllowAnnotationOverrides bool
 }
 
 func (patcher *SidecarInjectorPatcher) sideCarInjectionAnnotation() string {
@@ -55,7 +57,7 @@ func (patcher *SidecarInjectorPatcher) configmapSidecarNames(namespace string, p
 	return nil, false
 }
 
-func createPatches[T any](newCollection []T, existingCollection []T, path string) []admission.PatchOperation {
+func createArrayPatches[T any](newCollection []T, existingCollection []T, path string) []admission.PatchOperation {
 	var patches []admission.PatchOperation
 	for index, item := range newCollection {
 		var value interface{}
@@ -71,6 +73,28 @@ func createPatches[T any](newCollection []T, existingCollection []T, path string
 			Path:  path,
 			Value: value,
 		})
+	}
+	return patches
+}
+
+func createAnnotationPatches(newMap map[string]string, existingMap map[string]string, override bool) []admission.PatchOperation {
+	var patches []admission.PatchOperation
+	for key, value := range newMap {
+		if _, ok := existingMap[key]; ok && override {
+			if override {
+				patches = append(patches, admission.PatchOperation{
+					Op:    "replace",
+					Path:  "/metadata/annotations/" + key,
+					Value: value,
+				})
+			}
+		} else {
+			patches = append(patches, admission.PatchOperation{
+				Op:    "add",
+				Path:  "/metadata/annotations",
+				Value: map[string]string{key: value},
+			})
+		}
 	}
 	return patches
 }
@@ -92,10 +116,11 @@ func (patcher *SidecarInjectorPatcher) PatchPodCreate(namespace string, pod core
 				}
 				if sidecars != nil {
 					for _, sidecar := range sidecars {
-						patches = append(patches, createPatches(sidecar.InitContainers, pod.Spec.InitContainers, "/spec/initContainers")...)
-						patches = append(patches, createPatches(sidecar.Containers, pod.Spec.Containers, "/spec/containers")...)
-						patches = append(patches, createPatches(sidecar.Volumes, pod.Spec.Volumes, "/spec/volumes")...)
-						patches = append(patches, createPatches(sidecar.ImagePullSecrets, pod.Spec.ImagePullSecrets, "/spec/imagePullSecrets")...)
+						patches = append(patches, createArrayPatches(sidecar.InitContainers, pod.Spec.InitContainers, "/spec/initContainers")...)
+						patches = append(patches, createArrayPatches(sidecar.Containers, pod.Spec.Containers, "/spec/containers")...)
+						patches = append(patches, createArrayPatches(sidecar.Volumes, pod.Spec.Volumes, "/spec/volumes")...)
+						patches = append(patches, createArrayPatches(sidecar.ImagePullSecrets, pod.Spec.ImagePullSecrets, "/spec/imagePullSecrets")...)
+						patches = append(patches, createAnnotationPatches(sidecar.Annotations, pod.Annotations, patcher.AllowAnnotationOverrides)...)
 					}
 				}
 			}
