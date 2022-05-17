@@ -20,6 +20,7 @@ type SideCar struct {
 	Volumes          []corev1.Volume               `yaml:"volumes"`
 	ImagePullSecrets []corev1.LocalObjectReference `yaml:"imagePullSecrets"`
 	Annotations      map[string]string             `yaml:"annotations"`
+	Labels           map[string]string             `yaml:"labels"`
 }
 
 type SidecarInjectorPatcher struct {
@@ -28,6 +29,7 @@ type SidecarInjectorPatcher struct {
 	InjectName               string
 	SidecarDataKey           string
 	AllowAnnotationOverrides bool
+	AllowLabelOverrides      bool
 }
 
 func (patcher *SidecarInjectorPatcher) sideCarInjectionAnnotation() string {
@@ -77,21 +79,21 @@ func createArrayPatches[T any](newCollection []T, existingCollection []T, path s
 	return patches
 }
 
-func createAnnotationPatches(newMap map[string]string, existingMap map[string]string, override bool) []admission.PatchOperation {
+func createObjectPatches(newMap map[string]string, existingMap map[string]string, path string, override bool) []admission.PatchOperation {
 	var patches []admission.PatchOperation
 	for key, value := range newMap {
-		if _, ok := existingMap[key]; ok && override {
+		if _, ok := existingMap[key]; ok {
 			if override {
 				patches = append(patches, admission.PatchOperation{
 					Op:    "replace",
-					Path:  "/metadata/annotations/" + key,
+					Path:  path + "/" + key,
 					Value: value,
 				})
 			}
 		} else {
 			patches = append(patches, admission.PatchOperation{
 				Op:    "add",
-				Path:  "/metadata/annotations",
+				Path:  path,
 				Value: map[string]string{key: value},
 			})
 		}
@@ -120,7 +122,8 @@ func (patcher *SidecarInjectorPatcher) PatchPodCreate(namespace string, pod core
 						patches = append(patches, createArrayPatches(sidecar.Containers, pod.Spec.Containers, "/spec/containers")...)
 						patches = append(patches, createArrayPatches(sidecar.Volumes, pod.Spec.Volumes, "/spec/volumes")...)
 						patches = append(patches, createArrayPatches(sidecar.ImagePullSecrets, pod.Spec.ImagePullSecrets, "/spec/imagePullSecrets")...)
-						patches = append(patches, createAnnotationPatches(sidecar.Annotations, pod.Annotations, patcher.AllowAnnotationOverrides)...)
+						patches = append(patches, createObjectPatches(sidecar.Annotations, pod.Annotations, "/metadata/annotations", patcher.AllowAnnotationOverrides)...)
+						patches = append(patches, createObjectPatches(sidecar.Labels, pod.Annotations, "/metadata/labels", patcher.AllowLabelOverrides)...)
 					}
 				}
 			}
