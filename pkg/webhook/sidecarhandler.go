@@ -125,6 +125,7 @@ func (patcher *SidecarInjectorPatcher) PatchPodCreate(namespace string, pod core
 						patches = append(patches, createObjectPatches(sidecar.Annotations, pod.Annotations, "/metadata/annotations", patcher.AllowAnnotationOverrides)...)
 						patches = append(patches, createObjectPatches(sidecar.Labels, pod.Annotations, "/metadata/labels", patcher.AllowLabelOverrides)...)
 					}
+					log.Infof("sideCar injection for %v/%v: patches: %v", namespace, pod.Name, patches)
 				}
 			}
 		}
