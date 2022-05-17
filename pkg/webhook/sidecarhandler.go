@@ -117,7 +117,7 @@ func (patcher *SidecarInjectorPatcher) PatchPodCreate(namespace string, pod core
 					log.Errorf("error unmarshalling %s from configmap %s/%s", patcher.SidecarDataKey, pod.GetNamespace(), configmapSidecarName)
 				}
 				if sidecars != nil {
-					log.Infof("Sidecar to be injected: %s", sidecars)
+					log.Infof("Sidecar to be injected: %v", sidecars)
 					for _, sidecar := range sidecars {
 						patches = append(patches, createArrayPatches(sidecar.InitContainers, pod.Spec.InitContainers, "/spec/initContainers")...)
 						patches = append(patches, createArrayPatches(sidecar.Containers, pod.Spec.Containers, "/spec/containers")...)
