@@ -28,8 +28,8 @@ func Test_createObjectPatches(t *testing.T) {
 			},
 			want: []admission.PatchOperation{{
 				Op:    "add",
-				Path:  "/metadata/annotations",
-				Value: map[string]string{"my": "annotation"},
+				Path:  "/metadata/annotations/my",
+				Value: "annotation",
 			}},
 		},
 		{
@@ -77,8 +77,8 @@ func Test_createObjectPatches(t *testing.T) {
 			},
 			want: []admission.PatchOperation{{
 				Op:    "add",
-				Path:  "/metadata/labels",
-				Value: map[string]string{"my": "label"},
+				Path:  "/metadata/labels/my",
+				Value: "label",
 			}},
 		},
 		{

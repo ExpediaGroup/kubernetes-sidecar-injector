@@ -37,6 +37,10 @@ func (patcher *SidecarInjectorPatcher) sideCarInjectionAnnotation() string {
 }
 
 func (patcher *SidecarInjectorPatcher) configmapSidecarNames(namespace string, pod corev1.Pod) ([]string, bool) {
+	podName := pod.GetName()
+	if podName == "" {
+		podName = pod.GetGenerateName()
+	}
 	annotations := map[string]string{}
 	if pod.GetAnnotations() != nil {
 		annotations = pod.GetAnnotations()
@@ -47,11 +51,7 @@ func (patcher *SidecarInjectorPatcher) configmapSidecarNames(namespace string, p
 		})
 
 		if len(parts) > 0 {
-			name := pod.GetName()
-			if name == "" {
-				name = pod.GetGenerateName()
-			}
-			log.Infof("sideCar injection for %v/%v: sidecars: %v", namespace, name, sidecars)
+			log.Infof("sideCar injection for %v/%v: sidecars: %v", namespace, podName, sidecars)
 			return parts, true
 		}
 	}
@@ -81,27 +81,35 @@ func createArrayPatches[T any](newCollection []T, existingCollection []T, path s
 
 func createObjectPatches(newMap map[string]string, existingMap map[string]string, path string, override bool) []admission.PatchOperation {
 	var patches []admission.PatchOperation
-	for key, value := range newMap {
-		if _, ok := existingMap[key]; ok {
-			if override {
+	if existingMap == nil {
+		patches = append(patches, admission.PatchOperation{
+			Op:    "add",
+			Path:  path,
+			Value: newMap,
+		})
+	} else {
+		for key, value := range newMap {
+			if _, ok := existingMap[key]; !ok || (ok && override) {
+				op := "add"
+				if ok {
+					op = "replace"
+				}
 				patches = append(patches, admission.PatchOperation{
-					Op:    "replace",
+					Op:    op,
 					Path:  path + "/" + key,
 					Value: value,
 				})
 			}
-		} else {
-			patches = append(patches, admission.PatchOperation{
-				Op:    "add",
-				Path:  path,
-				Value: map[string]string{key: value},
-			})
 		}
 	}
 	return patches
 }
 
 func (patcher *SidecarInjectorPatcher) PatchPodCreate(namespace string, pod corev1.Pod) ([]admission.PatchOperation, error) {
+	podName := pod.GetName()
+	if podName == "" {
+		podName = pod.GetGenerateName()
+	}
 	ctx := context.Background()
 	var patches []admission.PatchOperation
 	if configmapSidecarNames, ok := patcher.configmapSidecarNames(namespace, pod); ok {
@@ -117,7 +125,6 @@ func (patcher *SidecarInjectorPatcher) PatchPodCreate(namespace string, pod core
 					log.Errorf("error unmarshalling %s from configmap %s/%s", patcher.SidecarDataKey, pod.GetNamespace(), configmapSidecarName)
 				}
 				if sidecars != nil {
-					log.Infof("Sidecar to be injected: %v", sidecars)
 					for _, sidecar := range sidecars {
 						patches = append(patches, createArrayPatches(sidecar.InitContainers, pod.Spec.InitContainers, "/spec/initContainers")...)
 						patches = append(patches, createArrayPatches(sidecar.Containers, pod.Spec.Containers, "/spec/containers")...)
@@ -126,7 +133,7 @@ func (patcher *SidecarInjectorPatcher) PatchPodCreate(namespace string, pod core
 						patches = append(patches, createObjectPatches(sidecar.Annotations, pod.Annotations, "/metadata/annotations", patcher.AllowAnnotationOverrides)...)
 						patches = append(patches, createObjectPatches(sidecar.Labels, pod.Annotations, "/metadata/labels", patcher.AllowLabelOverrides)...)
 					}
-					log.Infof("sideCar injection for %v/%v: patches: %v", namespace, pod.Name, patches)
+					log.Debugf("sidecar patches being applied for %v/%v: patches: %v", namespace, podName, patches)
 				}
 			}
 		}
