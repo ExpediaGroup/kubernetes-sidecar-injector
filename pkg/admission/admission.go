@@ -1,6 +1,7 @@
 package admission
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -18,9 +19,9 @@ type PatchOperation struct {
 }
 
 type RequestHandler interface {
-	handleAdmissionCreate(request *admissionv1.AdmissionRequest) ([]PatchOperation, error)
-	handleAdmissionUpdate(request *admissionv1.AdmissionRequest) ([]PatchOperation, error)
-	handleAdmissionDelete(request *admissionv1.AdmissionRequest) ([]PatchOperation, error)
+	handleAdmissionCreate(ctx context.Context, request *admissionv1.AdmissionRequest) ([]PatchOperation, error)
+	handleAdmissionUpdate(ctx context.Context, request *admissionv1.AdmissionRequest) ([]PatchOperation, error)
+	handleAdmissionDelete(ctx context.Context, request *admissionv1.AdmissionRequest) ([]PatchOperation, error)
 }
 
 type Handler struct {
@@ -51,9 +52,11 @@ func (handler *Handler) HandleAdmission(writer http.ResponseWriter, request *htt
 		return
 	}
 
+	ctx := context.Background()
+
 	req := admReview.Request
 	log.Infof("AdmissionReview for Kind=%v, Namespace=%v Name=%v UID=%v patchOperation=%v UserInfo=%v", req.Kind, req.Namespace, req.Name, req.UID, req.Operation, req.UserInfo)
-	if patchOperations, err := handler.Process(req, handler.Handler); err != nil {
+	if patchOperations, err := handler.Process(ctx, req, handler.Handler); err != nil {
 		message := fmt.Sprintf("request for object '%s' with name '%s' in namespace '%s' denied: %v", req.Kind.String(), req.Name, req.Namespace, err)
 		log.Error(message)
 		handler.writeDeniedAdmissionResponse(&admReview, message, writer)
@@ -66,14 +69,14 @@ func (handler *Handler) HandleAdmission(writer http.ResponseWriter, request *htt
 	}
 }
 
-func (handler *Handler) Process(request *admissionv1.AdmissionRequest, requestHandler RequestHandler) ([]PatchOperation, error) {
+func (handler *Handler) Process(ctx context.Context, request *admissionv1.AdmissionRequest, requestHandler RequestHandler) ([]PatchOperation, error) {
 	switch request.Operation {
 	case admissionv1.Create:
-		return requestHandler.handleAdmissionCreate(request)
+		return requestHandler.handleAdmissionCreate(ctx, request)
 	case admissionv1.Update:
-		return requestHandler.handleAdmissionUpdate(request)
+		return requestHandler.handleAdmissionUpdate(ctx, request)
 	case admissionv1.Delete:
-		return requestHandler.handleAdmissionDelete(request)
+		return requestHandler.handleAdmissionDelete(ctx, request)
 	default:
 		return nil, fmt.Errorf("unhandled request operations type %s", request.Operation)
 	}
