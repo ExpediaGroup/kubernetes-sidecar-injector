@@ -84,3 +84,10 @@ You need to add this repository to your Helm repositories:
 helm repo add kubernetes-sidecar-injector  https://opensource.expediagroup.com/kubernetes-sidecar-injector/
 helm repo update
 ```
+
+### Kind Testing
+```shell
+make kind
+make install-sample-init-container # or make install-sample-container
+make follow-logs
+```
