@@ -24,7 +24,10 @@ data:
         - name: agent-conf
           configMap:
             name: haystack-agent-conf-configmap
-
+      annotations:
+        my: annotation
+      labels:
+        my: label
 ---
 apiVersion: v1
 kind: ConfigMap

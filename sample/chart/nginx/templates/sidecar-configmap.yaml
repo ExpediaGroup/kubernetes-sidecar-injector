@@ -14,3 +14,7 @@ data:
           volumeMounts:
             - name: workdir
               mountPath: "/work-dir"
+      annotations:
+        my: annotation
+      labels:
+        my: label

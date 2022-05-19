@@ -19,13 +19,17 @@ type SideCar struct {
 	Containers       []corev1.Container            `yaml:"containers"`
 	Volumes          []corev1.Volume               `yaml:"volumes"`
 	ImagePullSecrets []corev1.LocalObjectReference `yaml:"imagePullSecrets"`
+	Annotations      map[string]string             `yaml:"annotations"`
+	Labels           map[string]string             `yaml:"labels"`
 }
 
 type SidecarInjectorPatcher struct {
-	K8sClient      kubernetes.Interface
-	InjectPrefix   string
-	InjectName     string
-	SidecarDataKey string
+	K8sClient                kubernetes.Interface
+	InjectPrefix             string
+	InjectName               string
+	SidecarDataKey           string
+	AllowAnnotationOverrides bool
+	AllowLabelOverrides      bool
 }
 
 func (patcher *SidecarInjectorPatcher) sideCarInjectionAnnotation() string {
@@ -33,6 +37,10 @@ func (patcher *SidecarInjectorPatcher) sideCarInjectionAnnotation() string {
 }
 
 func (patcher *SidecarInjectorPatcher) configmapSidecarNames(namespace string, pod corev1.Pod) ([]string, bool) {
+	podName := pod.GetName()
+	if podName == "" {
+		podName = pod.GetGenerateName()
+	}
 	annotations := map[string]string{}
 	if pod.GetAnnotations() != nil {
 		annotations = pod.GetAnnotations()
@@ -43,11 +51,7 @@ func (patcher *SidecarInjectorPatcher) configmapSidecarNames(namespace string, p
 		})
 
 		if len(parts) > 0 {
-			name := pod.GetName()
-			if name == "" {
-				name = pod.GetGenerateName()
-			}
-			log.Infof("sideCar injection for %v/%v: sidecars: %v", namespace, name, sidecars)
+			log.Infof("sideCar injection for %v/%v: sidecars: %v", namespace, podName, sidecars)
 			return parts, true
 		}
 	}
@@ -55,7 +59,7 @@ func (patcher *SidecarInjectorPatcher) configmapSidecarNames(namespace string, p
 	return nil, false
 }
 
-func createPatches[T any](newCollection []T, existingCollection []T, path string) []admission.PatchOperation {
+func createArrayPatches[T any](newCollection []T, existingCollection []T, path string) []admission.PatchOperation {
 	var patches []admission.PatchOperation
 	for index, item := range newCollection {
 		var value interface{}
@@ -75,7 +79,37 @@ func createPatches[T any](newCollection []T, existingCollection []T, path string
 	return patches
 }
 
+func createObjectPatches(newMap map[string]string, existingMap map[string]string, path string, override bool) []admission.PatchOperation {
+	var patches []admission.PatchOperation
+	if existingMap == nil {
+		patches = append(patches, admission.PatchOperation{
+			Op:    "add",
+			Path:  path,
+			Value: newMap,
+		})
+	} else {
+		for key, value := range newMap {
+			if _, ok := existingMap[key]; !ok || (ok && override) {
+				op := "add"
+				if ok {
+					op = "replace"
+				}
+				patches = append(patches, admission.PatchOperation{
+					Op:    op,
+					Path:  path + "/" + key,
+					Value: value,
+				})
+			}
+		}
+	}
+	return patches
+}
+
 func (patcher *SidecarInjectorPatcher) PatchPodCreate(namespace string, pod corev1.Pod) ([]admission.PatchOperation, error) {
+	podName := pod.GetName()
+	if podName == "" {
+		podName = pod.GetGenerateName()
+	}
 	ctx := context.Background()
 	var patches []admission.PatchOperation
 	if configmapSidecarNames, ok := patcher.configmapSidecarNames(namespace, pod); ok {
@@ -92,11 +126,14 @@ func (patcher *SidecarInjectorPatcher) PatchPodCreate(namespace string, pod core
 				}
 				if sidecars != nil {
 					for _, sidecar := range sidecars {
-						patches = append(patches, createPatches(sidecar.InitContainers, pod.Spec.InitContainers, "/spec/initContainers")...)
-						patches = append(patches, createPatches(sidecar.Containers, pod.Spec.Containers, "/spec/containers")...)
-						patches = append(patches, createPatches(sidecar.Volumes, pod.Spec.Volumes, "/spec/volumes")...)
-						patches = append(patches, createPatches(sidecar.ImagePullSecrets, pod.Spec.ImagePullSecrets, "/spec/imagePullSecrets")...)
+						patches = append(patches, createArrayPatches(sidecar.InitContainers, pod.Spec.InitContainers, "/spec/initContainers")...)
+						patches = append(patches, createArrayPatches(sidecar.Containers, pod.Spec.Containers, "/spec/containers")...)
+						patches = append(patches, createArrayPatches(sidecar.Volumes, pod.Spec.Volumes, "/spec/volumes")...)
+						patches = append(patches, createArrayPatches(sidecar.ImagePullSecrets, pod.Spec.ImagePullSecrets, "/spec/imagePullSecrets")...)
+						patches = append(patches, createObjectPatches(sidecar.Annotations, pod.Annotations, "/metadata/annotations", patcher.AllowAnnotationOverrides)...)
+						patches = append(patches, createObjectPatches(sidecar.Labels, pod.Annotations, "/metadata/labels", patcher.AllowLabelOverrides)...)
 					}
+					log.Debugf("sidecar patches being applied for %v/%v: patches: %v", namespace, podName, patches)
 				}
 			}
 		}

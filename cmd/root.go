@@ -15,7 +15,6 @@ var rootCmd = &cobra.Command{
 	Use:   "kubernetes-sidecar-injector",
 	Short: "Responsible for injecting sidecars into pod containers",
 	RunE: func(cmd *cobra.Command, args []string) error {
-
 		log.Infof("SimpleServer starting to listen in port %v", httpdConf.Port)
 		return httpdConf.Start()
 	},
