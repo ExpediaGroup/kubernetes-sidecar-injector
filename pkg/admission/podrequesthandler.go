@@ -1,6 +1,7 @@
 package admission
 
 import (
+	"context"
 	"encoding/json"
 	"github.com/pkg/errors"
 	admissionv1 "k8s.io/api/admission/v1"
@@ -11,15 +12,15 @@ type PodAdmissionRequestHandler struct {
 	PodHandler PodPatcher
 }
 
-func (handler *PodAdmissionRequestHandler) handleAdmissionCreate(request *admissionv1.AdmissionRequest) ([]PatchOperation, error) {
+func (handler *PodAdmissionRequestHandler) handleAdmissionCreate(ctx context.Context, request *admissionv1.AdmissionRequest) ([]PatchOperation, error) {
 	if pod, err := unmarshalPod(request.Object.Raw); err != nil {
 		return nil, err
 	} else {
-		return handler.PodHandler.PatchPodCreate(request.Namespace, pod)
+		return handler.PodHandler.PatchPodCreate(ctx, request.Namespace, pod)
 	}
 }
 
-func (handler *PodAdmissionRequestHandler) handleAdmissionUpdate(request *admissionv1.AdmissionRequest) ([]PatchOperation, error) {
+func (handler *PodAdmissionRequestHandler) handleAdmissionUpdate(ctx context.Context, request *admissionv1.AdmissionRequest) ([]PatchOperation, error) {
 	oldPod, err := unmarshalPod(request.OldObject.Raw)
 	if err != nil {
 		return nil, err
@@ -27,15 +28,15 @@ func (handler *PodAdmissionRequestHandler) handleAdmissionUpdate(request *admiss
 	if newPod, err := unmarshalPod(request.Object.Raw); err != nil {
 		return nil, err
 	} else {
-		return handler.PodHandler.PatchPodUpdate(request.Namespace, oldPod, newPod)
+		return handler.PodHandler.PatchPodUpdate(ctx, request.Namespace, oldPod, newPod)
 	}
 }
 
-func (handler *PodAdmissionRequestHandler) handleAdmissionDelete(request *admissionv1.AdmissionRequest) ([]PatchOperation, error) {
+func (handler *PodAdmissionRequestHandler) handleAdmissionDelete(ctx context.Context, request *admissionv1.AdmissionRequest) ([]PatchOperation, error) {
 	if pod, err := unmarshalPod(request.OldObject.Raw); err != nil {
 		return nil, err
 	} else {
-		return handler.PodHandler.PatchPodDelete(request.Namespace, pod)
+		return handler.PodHandler.PatchPodDelete(ctx, request.Namespace, pod)
 	}
 }
 

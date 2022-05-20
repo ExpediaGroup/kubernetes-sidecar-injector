@@ -36,7 +36,7 @@ func (patcher *SidecarInjectorPatcher) sideCarInjectionAnnotation() string {
 	return patcher.InjectPrefix + "/" + patcher.InjectName
 }
 
-func (patcher *SidecarInjectorPatcher) configmapSidecarNames(namespace string, pod corev1.Pod) ([]string, bool) {
+func (patcher *SidecarInjectorPatcher) configmapSidecarNames(namespace string, pod corev1.Pod) []string {
 	podName := pod.GetName()
 	if podName == "" {
 		podName = pod.GetGenerateName()
@@ -52,11 +52,11 @@ func (patcher *SidecarInjectorPatcher) configmapSidecarNames(namespace string, p
 
 		if len(parts) > 0 {
 			log.Infof("sideCar injection for %v/%v: sidecars: %v", namespace, podName, sidecars)
-			return parts, true
+			return parts
 		}
 	}
 	log.Infof("Skipping mutation for [%v]. No action required", pod.GetName())
-	return nil, false
+	return nil
 }
 
 func createArrayPatches[T any](newCollection []T, existingCollection []T, path string) []admission.PatchOperation {
@@ -105,14 +105,13 @@ func createObjectPatches(newMap map[string]string, existingMap map[string]string
 	return patches
 }
 
-func (patcher *SidecarInjectorPatcher) PatchPodCreate(namespace string, pod corev1.Pod) ([]admission.PatchOperation, error) {
+func (patcher *SidecarInjectorPatcher) PatchPodCreate(ctx context.Context, namespace string, pod corev1.Pod) ([]admission.PatchOperation, error) {
 	podName := pod.GetName()
 	if podName == "" {
 		podName = pod.GetGenerateName()
 	}
-	ctx := context.Background()
 	var patches []admission.PatchOperation
-	if configmapSidecarNames, ok := patcher.configmapSidecarNames(namespace, pod); ok {
+	if configmapSidecarNames := patcher.configmapSidecarNames(namespace, pod); configmapSidecarNames != nil {
 		for _, configmapSidecarName := range configmapSidecarNames {
 			configmapSidecar, err := patcher.K8sClient.CoreV1().ConfigMaps(namespace).Get(ctx, configmapSidecarName, metav1.GetOptions{})
 			if k8serrors.IsNotFound(err) {
@@ -131,7 +130,7 @@ func (patcher *SidecarInjectorPatcher) PatchPodCreate(namespace string, pod core
 						patches = append(patches, createArrayPatches(sidecar.Volumes, pod.Spec.Volumes, "/spec/volumes")...)
 						patches = append(patches, createArrayPatches(sidecar.ImagePullSecrets, pod.Spec.ImagePullSecrets, "/spec/imagePullSecrets")...)
 						patches = append(patches, createObjectPatches(sidecar.Annotations, pod.Annotations, "/metadata/annotations", patcher.AllowAnnotationOverrides)...)
-						patches = append(patches, createObjectPatches(sidecar.Labels, pod.Annotations, "/metadata/labels", patcher.AllowLabelOverrides)...)
+						patches = append(patches, createObjectPatches(sidecar.Labels, pod.Labels, "/metadata/labels", patcher.AllowLabelOverrides)...)
 					}
 					log.Debugf("sidecar patches being applied for %v/%v: patches: %v", namespace, podName, patches)
 				}
@@ -142,11 +141,11 @@ func (patcher *SidecarInjectorPatcher) PatchPodCreate(namespace string, pod core
 }
 
 /*PatchPodUpdate not supported, only support create */
-func (patcher *SidecarInjectorPatcher) PatchPodUpdate(_ string, _ corev1.Pod, _ corev1.Pod) ([]admission.PatchOperation, error) {
+func (patcher *SidecarInjectorPatcher) PatchPodUpdate(_ context.Context, _ string, _ corev1.Pod, _ corev1.Pod) ([]admission.PatchOperation, error) {
 	return nil, nil
 }
 
 /*PatchPodDelete not supported, only support create */
-func (patcher *SidecarInjectorPatcher) PatchPodDelete(_ string, _ corev1.Pod) ([]admission.PatchOperation, error) {
+func (patcher *SidecarInjectorPatcher) PatchPodDelete(_ context.Context, _ string, _ corev1.Pod) ([]admission.PatchOperation, error) {
 	return nil, nil
 }
