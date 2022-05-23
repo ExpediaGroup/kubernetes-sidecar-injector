@@ -13,6 +13,7 @@ import (
 	"strings"
 )
 
+// SideCar Kubernetes Sidecar Injector schema
 type SideCar struct {
 	Name             string                        `yaml:"name"`
 	InitContainers   []corev1.Container            `yaml:"initContainers"`
@@ -23,6 +24,7 @@ type SideCar struct {
 	Labels           map[string]string             `yaml:"labels"`
 }
 
+// SidecarInjectorPatcher Sidecar Injector patcher
 type SidecarInjectorPatcher struct {
 	K8sClient                kubernetes.Interface
 	InjectPrefix             string
@@ -105,6 +107,7 @@ func createObjectPatches(newMap map[string]string, existingMap map[string]string
 	return patches
 }
 
+// PatchPodCreate Handle Pod Create Patch
 func (patcher *SidecarInjectorPatcher) PatchPodCreate(ctx context.Context, namespace string, pod corev1.Pod) ([]admission.PatchOperation, error) {
 	podName := pod.GetName()
 	if podName == "" {

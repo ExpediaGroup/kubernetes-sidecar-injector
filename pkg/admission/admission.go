@@ -12,22 +12,26 @@ import (
 	"net/http"
 )
 
+// PatchOperation JsonPatch struct http://jsonpatch.com/
 type PatchOperation struct {
 	Op    string      `json:"op"`
 	Path  string      `json:"path"`
 	Value interface{} `json:"value,omitempty"`
 }
 
+// RequestHandler AdmissionRequest handler
 type RequestHandler interface {
 	handleAdmissionCreate(ctx context.Context, request *admissionv1.AdmissionRequest) ([]PatchOperation, error)
 	handleAdmissionUpdate(ctx context.Context, request *admissionv1.AdmissionRequest) ([]PatchOperation, error)
 	handleAdmissionDelete(ctx context.Context, request *admissionv1.AdmissionRequest) ([]PatchOperation, error)
 }
 
+// Handler Generic handler for Admission
 type Handler struct {
 	Handler RequestHandler
 }
 
+// HandleAdmission HttpServer function to handle Admissions
 func (handler *Handler) HandleAdmission(writer http.ResponseWriter, request *http.Request) {
 	if err := validateRequest(request); err != nil {
 		log.Error(err.Error())
@@ -56,7 +60,7 @@ func (handler *Handler) HandleAdmission(writer http.ResponseWriter, request *htt
 
 	req := admReview.Request
 	log.Infof("AdmissionReview for Kind=%v, Namespace=%v Name=%v UID=%v patchOperation=%v UserInfo=%v", req.Kind, req.Namespace, req.Name, req.UID, req.Operation, req.UserInfo)
-	if patchOperations, err := handler.Process(ctx, req, handler.Handler); err != nil {
+	if patchOperations, err := handler.Process(ctx, req); err != nil {
 		message := fmt.Sprintf("request for object '%s' with name '%s' in namespace '%s' denied: %v", req.Kind.String(), req.Name, req.Namespace, err)
 		log.Error(message)
 		handler.writeDeniedAdmissionResponse(&admReview, message, writer)
@@ -69,14 +73,15 @@ func (handler *Handler) HandleAdmission(writer http.ResponseWriter, request *htt
 	}
 }
 
-func (handler *Handler) Process(ctx context.Context, request *admissionv1.AdmissionRequest, requestHandler RequestHandler) ([]PatchOperation, error) {
+// Process Handles the AdmissionRequest via the handler
+func (handler *Handler) Process(ctx context.Context, request *admissionv1.AdmissionRequest) ([]PatchOperation, error) {
 	switch request.Operation {
 	case admissionv1.Create:
-		return requestHandler.handleAdmissionCreate(ctx, request)
+		return handler.Handler.handleAdmissionCreate(ctx, request)
 	case admissionv1.Update:
-		return requestHandler.handleAdmissionUpdate(ctx, request)
+		return handler.Handler.handleAdmissionUpdate(ctx, request)
 	case admissionv1.Delete:
-		return requestHandler.handleAdmissionDelete(ctx, request)
+		return handler.Handler.handleAdmissionDelete(ctx, request)
 	default:
 		return nil, fmt.Errorf("unhandled request operations type %s", request.Operation)
 	}
@@ -99,7 +104,7 @@ func validateRequest(req *http.Request) error {
 func readRequestBody(req *http.Request) ([]byte, error) {
 	body, err := ioutil.ReadAll(req.Body)
 	if err != nil {
-		return nil, errors.New(fmt.Sprintf("unable to read Request Body: %v", err))
+		return nil, fmt.Errorf("unable to read Request Body: %v", err)
 	}
 	return body, nil
 }
