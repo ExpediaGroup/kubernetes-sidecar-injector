@@ -65,7 +65,7 @@ Note the **2 containers** in the echo-server pod instead of one.
 Run the following commands to delete and cleanup the deployed webhook
 
 ```
-helm delete -n kubernetes-sidecar-injector kubernetes-sidecar-injector
+helm delete -n sidecar-injector kubernetes-sidecar-injector
 helm delete -n sample sample-echo-server-sidecar-injector
 ```
 
