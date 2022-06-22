@@ -35,7 +35,7 @@ make kind-install
 After deployment, one can check the service running by
 
 ```bash
-kubectl get pods -n kubernetes-sidecar-injector
+kubectl get pods -n sidecar-injector
 
 NAME                                           READY   STATUS    RESTARTS   AGE
 kubernetes-sidecar-injector-78648d458b-7cv7l   1/1     Running   0          32m
@@ -46,7 +46,7 @@ kubernetes-sidecar-injector-78648d458b-7cv7l   1/1     Running   0          32m
 Run the following command to deploy a sample `echo-server`. Note, this [deployment spec carries an annotation](sample/chart/echo-server/templates/deployment.yaml#L16) `sidecar-injector.expedia.com/inject: "haystack-agent"` that triggers injection of `haystack-agent` sidecar defined in [sidecar-configmap.yaml](sample/chart/echo-server/templates/sidecar-configmap.yaml) file.
 
 ```bash
-make install-sample
+make install-sample-container
 ```
 
 One can then run the following command to confirm the sidecar has been injected
