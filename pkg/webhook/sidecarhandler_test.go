@@ -3,14 +3,15 @@ package webhook
 import (
 	"context"
 	"fmt"
+	"reflect"
+	"testing"
+
 	"github.com/expediagroup/kubernetes-sidecar-injector/pkg/admission"
 	"github.com/stretchr/testify/assert"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/fake"
-	"reflect"
-	"testing"
 )
 
 func TestSidecarInjectorPatcher_PatchPodCreate(t *testing.T) {
@@ -467,6 +468,22 @@ func Test_createArrayPatches(t *testing.T) {
 				Op:    "add",
 				Path:  "/spec/initContainers/-",
 				Value: v1.Container{Name: "Test2"},
+			}},
+		}, {
+			name: "test patching multiple initContainer not first",
+			args: args[v1.Container]{
+				newCollection:      []v1.Container{{Name: "Test2"}, {Name: "Test3"}},
+				existingCollection: []v1.Container{{Name: "Test"}},
+				path:               "/spec/initContainers",
+			},
+			want: []admission.PatchOperation{{
+				Op:    "add",
+				Path:  "/spec/initContainers/-",
+				Value: v1.Container{Name: "Test2"},
+			}, {
+				Op:    "add",
+				Path:  "/spec/initContainers/-",
+				Value: v1.Container{Name: "Test3"},
 			}},
 		},
 	}
