@@ -136,7 +136,7 @@ spec:
             successThreshold: 1
             failureThreshold: 5
             timeoutSeconds: 4
-      {{- with .Values.securityContext }}
+      {{- with .Values.podSecurityContext }}
       securityContext:
       {{ toYaml . | nindent 8 }}
       {{- end }}

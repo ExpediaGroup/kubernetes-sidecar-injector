@@ -14,7 +14,7 @@ container:
 
 podAnnotations: {}
 podLabels: {}
-securityContext: {}
+podSecurityContext: {}
 
 sidecars:
   dataKey: sidecars.yaml
