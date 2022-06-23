@@ -67,7 +67,7 @@ jobs:
 
   helm-release:
     runs-on: ubuntu-latest
-    needs: test
+    needs: docker-release
     steps:
       - name: Get specific changed files
         id: helm-specific-changes
