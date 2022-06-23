@@ -99,6 +99,8 @@ jobs:
           keywords:
             - kubernetes
             - sidecar-injection
+          sources:
+            - ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}
           EOF
 
       - name: commit the new Chart.yml
