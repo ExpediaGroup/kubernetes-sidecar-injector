@@ -62,8 +62,8 @@ jobs:
         if: steps.code-specific-changes.outputs.any_modified == 'true'
         uses: docker/build-push-action@v2
         with:
-          push: true
-          tags: ${{ github.event.organization.name }}:${{ steps.code-version-bump.outputs.newTag }}
+          push: false
+          tags: ${{ github.event.organization.name }}/${{ github.event.repository.name }}:${{ steps.code-version-bump.outputs.newTag }}
 
   helm-release:
     runs-on: ubuntu-latest
