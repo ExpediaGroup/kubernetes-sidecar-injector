@@ -1,4 +1,4 @@
-name: Helm-Release
+name: Build and Release Container and Helm Chart
 
 on:
   push:
