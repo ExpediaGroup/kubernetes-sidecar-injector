@@ -6,7 +6,7 @@ on:
       - mvaal/semantic-release
 
 jobs:
-  release:
+  test:
     runs-on: ubuntu-latest
     steps:
       - name: Set up Go ^1.18
@@ -21,7 +21,10 @@ jobs:
 
       - name: Unit Test
         run: make test
-
+  docker-release:
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
       - name: Code specific changes
         id: code-specific-changes
         uses: tj-actions/changed-files@v23
@@ -60,8 +63,12 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           push: true
-          tags: ${{ github.event.organization.org }}:${{ steps.code-version-bump.outputs.newTag }}
+          tags: ${{ github.event.organization.name }}:${{ steps.code-version-bump.outputs.newTag }}
 
+  helm-release:
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
       - name: Get specific changed files
         id: helm-specific-changes
         uses: tj-actions/changed-files@v23
