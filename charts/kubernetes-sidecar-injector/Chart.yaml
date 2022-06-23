@@ -1,6 +1,6 @@
 name: kubernetes-sidecar-injector
 home: https://github.com/expediagroup/kubernetes-sidecar-injector
-version: 1.0.4
+version: 1.1.0
 appVersion: "0.1"
 keywords:
   - kubernetes
@@ -8,4 +8,4 @@ keywords:
 description:
 apiVersion:
 sources:
-- https://github.com/expediagroup/kubernetes-sidecar-injector
+  - https://github.com/expediagroup/kubernetes-sidecar-injector

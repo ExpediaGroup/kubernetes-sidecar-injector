@@ -8,7 +8,7 @@ data:
     - name: haystack-agent
       containers:
         - name: haystack-agent
-          image: expediagroup/haystack-agent
+          image: expediadotcom/haystack-agent
           imagePullPolicy: IfNotPresent
           args:
             - --config-provider

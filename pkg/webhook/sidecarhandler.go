@@ -2,6 +2,8 @@ package webhook
 
 import (
 	"context"
+	"strings"
+
 	"github.com/expediagroup/kubernetes-sidecar-injector/pkg/admission"
 	"github.com/ghodss/yaml"
 	"github.com/samber/lo"
@@ -10,7 +12,6 @@ import (
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
-	"strings"
 )
 
 // SideCar Kubernetes Sidecar Injector schema
@@ -64,17 +65,18 @@ func (patcher *SidecarInjectorPatcher) configmapSidecarNames(namespace string, p
 func createArrayPatches[T any](newCollection []T, existingCollection []T, path string) []admission.PatchOperation {
 	var patches []admission.PatchOperation
 	for index, item := range newCollection {
+		indexPath := path
 		var value interface{}
 		first := index == 0 && len(existingCollection) == 0
 		if !first {
-			path = path + "/-"
+			indexPath = indexPath + "/-"
 			value = item
 		} else {
 			value = []T{item}
 		}
 		patches = append(patches, admission.PatchOperation{
 			Op:    "add",
-			Path:  path,
+			Path:  indexPath,
 			Value: value,
 		})
 	}
