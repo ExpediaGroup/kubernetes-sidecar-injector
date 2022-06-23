@@ -38,11 +38,11 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GH_PERSONAL_ACCESS_TOKEN }}
         with:
-          skip-tag: 'true'
+          tag-prefix:  'v'
           minor-wording: 'feat'
           major-wording: 'perf'
           patch-wording: 'fix'
-          commit-message: 'CI: Bump Helm chart version to {{version}} [skip ci]'
+          commit-message: 'CI: Bump app version to {{version}} [skip ci]'
 
       - name: Set up Docker Buildx
         if: steps.code-specific-changes.outputs.any_modified == 'true'
@@ -97,7 +97,6 @@ jobs:
           name: ${GITHUB_REPOSITORY#*/}
           home: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}
           version: ${{ steps.helm-version-bump.outputs.newTag }}
-          appVersion: ${{ steps.docker-tag.outputs.tag }}
           apiVersion: v2
           keywords:
             - kubernetes
