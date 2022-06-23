@@ -24,7 +24,7 @@ jobs:
 
       - name: Code specific changes
         id: code-specific-changes
-        uses: tj-actions/changed-files@v14.7
+        uses: tj-actions/changed-files@v23
         with:
           files_ignore: |
             charts
@@ -64,7 +64,7 @@ jobs:
 
       - name: Get specific changed files
         id: helm-specific-changes
-        uses: tj-actions/changed-files@v14.7
+        uses: tj-actions/changed-files@v23
         with:
           files: |
             charts/kubernetes-sidecar-injector
