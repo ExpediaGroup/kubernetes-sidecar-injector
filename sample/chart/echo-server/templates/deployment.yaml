@@ -21,7 +21,7 @@ spec:
       serviceAccountName: {{ .Chart.Name }}
       containers:
         - name: echo-server
-          image: hashicorp/http-echo:0.2.3
+          image: hashicorp/http-echo:alpine
           imagePullPolicy: IfNotPresent
           args:
             - -listen=:8080
