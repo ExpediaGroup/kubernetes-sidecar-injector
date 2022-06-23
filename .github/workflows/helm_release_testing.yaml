@@ -43,7 +43,6 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GH_PERSONAL_ACCESS_TOKEN }}
         with:
-          tag-prefix:  'v'
           minor-wording: 'feat'
           major-wording: 'perf'
           patch-wording: 'fix'
@@ -108,20 +107,20 @@ jobs:
             - sidecar-injection
           EOF
 
-      - name: commit the new Chart.yml
-        if: steps.helm-specific-changes.outputs.any_modified == 'true'
-        uses: stefanzweifel/git-auto-commit-action@v4
-        with:
-          commit_message: Automated Change
-
-      - name: Install Helm
-        if: steps.helm-specific-changes.outputs.any_modified == 'true'
-        uses: azure/setup-helm@v1
-        with:
-          version: v3.8.0
-
-      - name: Run chart-releaser
-        if: steps.helm-specific-changes.outputs.any_modified == 'true'
-        uses: helm/chart-releaser-action@v1.3.0
-        env:
-          CR_TOKEN: "${{ secrets.GH_PERSONAL_ACCESS_TOKEN }}"
+#      - name: commit the new Chart.yml
+#        if: steps.helm-specific-changes.outputs.any_modified == 'true'
+#        uses: stefanzweifel/git-auto-commit-action@v4
+#        with:
+#          commit_message: Automated Change
+#
+#      - name: Install Helm
+#        if: steps.helm-specific-changes.outputs.any_modified == 'true'
+#        uses: azure/setup-helm@v1
+#        with:
+#          version: v3.8.0
+#
+#      - name: Run chart-releaser
+#        if: steps.helm-specific-changes.outputs.any_modified == 'true'
+#        uses: helm/chart-releaser-action@v1.3.0
+#        env:
+#          CR_TOKEN: "${{ secrets.GH_PERSONAL_ACCESS_TOKEN }}"
