@@ -1,7 +1,9 @@
 name: kubernetes-sidecar-injector
 home: https://github.com/ExpediaGroup/kubernetes-sidecar-injector
-version: 0.0.1-alpha.1
+version: 0.0.1-alpha.2
 apiVersion: v2
 keywords:
   - kubernetes
   - sidecar-injection
+sources:
+  - https://github.com/ExpediaGroup/kubernetes-sidecar-injector
