@@ -60,7 +60,7 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           push: true
-          tags: ${{ env.GITHUB_REPOSITORY }}:${{ steps.code-version-bump.outputs.newTag }},${{ env.GITHUB_REPOSITORY }}:latest
+          tags: ${{ github.event.repository.name }}:${{ steps.code-version-bump.outputs.newTag }},${{ github.event.repository.name }}:latest
 
       - name: Get specific changed files
         id: helm-specific-changes
