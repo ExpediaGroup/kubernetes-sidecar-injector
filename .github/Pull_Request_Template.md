@@ -6,7 +6,6 @@
 need to incorporate in order to upgrade to this version?_
 
 ### :heavy_check_mark: Checklist
-
 - [ ] [Semantic Versioning](https://semver.org/) present in commit message.
 
 ### [Semantic Versioning](https://semver.org/)
