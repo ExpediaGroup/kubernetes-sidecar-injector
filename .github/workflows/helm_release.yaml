@@ -22,41 +22,62 @@ jobs:
       - name: Unit Test
         run: make test
 
-      - name: Construct Docker Tag
-        id: docker-tag
-        run: echo "::set-output name=tag::v1.0-RC-$(date +'%Y%m%d%H%M%S')"
+      - name: Code specific changes
+        id: code-specific-changes
+        uses: tj-actions/changed-files@v14.7
+        with:
+          files_ignore: |
+            charts
+            .github
+            .run
+
+      - name: Automated Code Version Bump
+        if: steps.code-specific-changes.outputs.any_modified == 'true'
+        id: code-version-bump
+        uses: 'phips28/gh-action-bump-version@master'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_PERSONAL_ACCESS_TOKEN }}
+        with:
+          skip-tag: 'true'
+          minor-wording: 'feat'
+          major-wording: 'perf'
+          patch-wording: 'fix'
+          commit-message: 'CI: Bump Helm chart version to {{version}} [skip ci]'
 
       - name: Set up Docker Buildx
+        if: steps.code-specific-changes.outputs.any_modified == 'true'
         uses: docker/setup-buildx-action@v1
 
       - name: Login to DockerHub
+        if: steps.code-specific-changes.outputs.any_modified == 'true'
         uses: docker/login-action@v1
         with:
           username: ${{ secrets.DOCKER_HUB_USERNAME }}
           password: ${{ secrets.DOCKER_HUB_PASSWORD }}
 
       - name: Build and push merge to main
+        if: steps.code-specific-changes.outputs.any_modified == 'true'
         uses: docker/build-push-action@v2
         with:
           push: true
-          tags: expediagroup/kubernetes-sidecar-injector:${{ steps.docker-tag.outputs.tag }},expediagroup/kubernetes-sidecar-injector:latest
+          tags: ${GITHUB_REPOSITORY}:${{ steps.code-version-bump.outputs.newTag }},${GITHUB_REPOSITORY}:latest
 
       - name: Get specific changed files
-        id: changed-files-specific
+        id: helm-specific-changes
         uses: tj-actions/changed-files@v14.7
         with:
           files: |
             charts/kubernetes-sidecar-injector
 
       - name: Configure Git
-        if: steps.changed-files-specific.outputs.any_modified == 'true'
+        if: steps.helm-specific-changes.outputs.any_modified == 'true'
         run: |
           git config user.name "$GITHUB_ACTOR"
           git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
 
-      - name: Automated Version Bump
-        if: steps.changed-files-specific.outputs.any_modified == 'true'
-        id: version-bump
+      - name: Automated Helm Version Bump
+        if: steps.helm-specific-changes.outputs.any_modified == 'true'
+        id: helm-version-bump
         uses: 'phips28/gh-action-bump-version@master'
         env:
           GITHUB_TOKEN: ${{ secrets.GH_PERSONAL_ACCESS_TOKEN }}
@@ -69,13 +90,13 @@ jobs:
           commit-message: 'CI: Bump Helm chart version to {{version}} [skip ci]'
 
       - name: update Chart.yaml
-        if: steps.changed-files-specific.outputs.any_modified == 'true'
+        if: steps.helm-specific-changes.outputs.any_modified == 'true'
         working-directory: charts/kubernetes-sidecar-injector
         run: |
           cat <<EOF > Chart.yaml
           name: ${GITHUB_REPOSITORY#*/}
           home: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}
-          version: ${{ steps.version-bump.outputs.newTag }}
+          version: ${{ steps.helm-version-bump.outputs.newTag }}
           appVersion: ${{ steps.docker-tag.outputs.tag }}
           apiVersion: v2
           keywords:
@@ -84,19 +105,19 @@ jobs:
           EOF
 
       - name: commit the new Chart.yml
-        if: steps.changed-files-specific.outputs.any_modified == 'true'
+        if: steps.helm-specific-changes.outputs.any_modified == 'true'
         uses: stefanzweifel/git-auto-commit-action@v4
         with:
           commit_message: Automated Change
 
       - name: Install Helm
-        if: steps.changed-files-specific.outputs.any_modified == 'true'
+        if: steps.helm-specific-changes.outputs.any_modified == 'true'
         uses: azure/setup-helm@v1
         with:
           version: v3.8.0
 
       - name: Run chart-releaser
-        if: steps.changed-files-specific.outputs.any_modified == 'true'
+        if: steps.helm-specific-changes.outputs.any_modified == 'true'
         uses: helm/chart-releaser-action@v1.3.0
         env:
           CR_TOKEN: "${{ secrets.GH_PERSONAL_ACCESS_TOKEN }}"
