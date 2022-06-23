@@ -9,6 +9,6 @@ need to incorporate in order to upgrade to this version?_
 - [ ] [Semantic Versioning](https://semver.org/) present in commit message.
 
 ### [Semantic Versioning](https://semver.org/)
-1. fixes/patch: patches a bug ([PATCH](http://semver.org/#summary)); e.g., fix: fixed a bug
-2. feat/new: new feature ([MINOR](http://semver.org/#summary)); e.g., feat: added a feature
-3. BREAKING CHANGE/major: a commit that has a footer BREAKING CHANGE:, or appends a ! after the type/scope, introduces a breaking API change (correlating with MAJOR in Semantic Versioning). Ex BREAKING CHANGE: adding the coolest thing to my app
+1. fix(pencil): patches a bug ([PATCH](http://semver.org/#summary)); e.g., fix(pencil): fixed a bug
+2. feat(pencil): new feature ([MINOR](http://semver.org/#summary)); e.g., feat(pencil): added a feature
+3. BREAKING CHANGE/perf(pencil): footer BREAKING CHANGE:, breaking change ([MAJOR](http://semver.org/#summary)); e.g., perf(pencil): api change

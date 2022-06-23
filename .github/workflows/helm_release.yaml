@@ -63,6 +63,9 @@ jobs:
           PACKAGEJSON_DIR: charts
         with:
           skip-tag: 'true'
+          minor-wording: 'feat'
+          major-wording: 'perf'
+          patch-wording: 'fix'
           commit-message: 'CI: Bump Helm chart version to {{version}} [skip ci]'
 
       - name: update Chart.yaml
