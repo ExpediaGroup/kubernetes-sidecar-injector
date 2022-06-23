@@ -13,6 +13,11 @@ jobs:
         id: github_context_step
         run: echo '${{ toJSON(github) }}'
 
+      - id: github-repository
+        uses: ASzc/change-string-case-action@v2
+        with:
+          string: ${{ github.repository }}
+
       - name: Set up Go ^1.18
         uses: actions/setup-go@v2
         with:
@@ -64,7 +69,7 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           push: false
-          tags: ${{ github.event.organization.name }}/${{ github.event.repository.name }}:${{ steps.code-version-bump.outputs.newTag }}
+          tags: ${{ steps.github-repository.outputs.lowercase }}:${{ steps.code-version-bump.outputs.newTag }}
 
       - name: Get specific changed files
         id: helm-specific-changes
