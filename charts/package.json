@@ -1,0 +1,9 @@
+{
+  "name": "kubernetes-sidecar-injector",
+  "version": "1.1.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ExpediaGroup/kubernetes-sidecar-injector.git"
+  },
+  "homepage": "https://github.com/ExpediaGroup/kubernetes-sidecar-injector#README.md"
+}

@@ -20,6 +20,7 @@ var rootCmd = &cobra.Command{
 	},
 }
 
+// Execute Kicks off the application
 func Execute() {
 	if err := rootCmd.Execute(); err != nil {
 		log.Errorf("Failed to start server: %v", err)
