@@ -27,6 +27,11 @@ jobs:
       - name: Unit Test
         run: make test
 
+      - name: Configure Git
+        run: |
+          git config user.name "$GITHUB_ACTOR"
+          git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
+
       - name: Code specific changes
         id: code-specific-changes
         uses: tj-actions/changed-files@v23
@@ -69,12 +74,6 @@ jobs:
         with:
           files: |
             charts/kubernetes-sidecar-injector
-
-      - name: Configure Git
-        if: steps.helm-specific-changes.outputs.any_modified == 'true'
-        run: |
-          git config user.name "$GITHUB_ACTOR"
-          git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
 
       - name: Automated Helm Version Bump
         if: steps.helm-specific-changes.outputs.any_modified == 'true'
