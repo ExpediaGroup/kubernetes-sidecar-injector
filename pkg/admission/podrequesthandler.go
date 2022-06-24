@@ -8,16 +8,17 @@ import (
 	corev1 "k8s.io/api/core/v1"
 )
 
+// PodAdmissionRequestHandler PodAdmissionRequest handler
 type PodAdmissionRequestHandler struct {
 	PodHandler PodPatcher
 }
 
 func (handler *PodAdmissionRequestHandler) handleAdmissionCreate(ctx context.Context, request *admissionv1.AdmissionRequest) ([]PatchOperation, error) {
-	if pod, err := unmarshalPod(request.Object.Raw); err != nil {
+	pod, err := unmarshalPod(request.Object.Raw)
+	if err != nil {
 		return nil, err
-	} else {
-		return handler.PodHandler.PatchPodCreate(ctx, request.Namespace, pod)
 	}
+	return handler.PodHandler.PatchPodCreate(ctx, request.Namespace, pod)
 }
 
 func (handler *PodAdmissionRequestHandler) handleAdmissionUpdate(ctx context.Context, request *admissionv1.AdmissionRequest) ([]PatchOperation, error) {
@@ -25,19 +26,19 @@ func (handler *PodAdmissionRequestHandler) handleAdmissionUpdate(ctx context.Con
 	if err != nil {
 		return nil, err
 	}
-	if newPod, err := unmarshalPod(request.Object.Raw); err != nil {
+	newPod, err := unmarshalPod(request.Object.Raw)
+	if err != nil {
 		return nil, err
-	} else {
-		return handler.PodHandler.PatchPodUpdate(ctx, request.Namespace, oldPod, newPod)
 	}
+	return handler.PodHandler.PatchPodUpdate(ctx, request.Namespace, oldPod, newPod)
 }
 
 func (handler *PodAdmissionRequestHandler) handleAdmissionDelete(ctx context.Context, request *admissionv1.AdmissionRequest) ([]PatchOperation, error) {
-	if pod, err := unmarshalPod(request.OldObject.Raw); err != nil {
+	pod, err := unmarshalPod(request.OldObject.Raw)
+	if err != nil {
 		return nil, err
-	} else {
-		return handler.PodHandler.PatchPodDelete(ctx, request.Namespace, pod)
 	}
+	return handler.PodHandler.PatchPodDelete(ctx, request.Namespace, pod)
 }
 
 func unmarshalPod(rawObject []byte) (corev1.Pod, error) {

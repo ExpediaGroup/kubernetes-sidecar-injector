@@ -25,12 +25,12 @@ type SimpleServer struct {
 
 /*Start the simple http server supporting TLS*/
 func (simpleServer *SimpleServer) Start() error {
-	if k8sClient, err := simpleServer.CreateClient(); err != nil {
+	k8sClient, err := simpleServer.CreateClient()
+	if err != nil {
 		return err
-	} else {
-		simpleServer.Patcher.K8sClient = k8sClient
 	}
 
+	simpleServer.Patcher.K8sClient = k8sClient
 	server := &http.Server{
 		Addr: fmt.Sprintf(":%d", simpleServer.Port),
 	}
@@ -43,16 +43,16 @@ func (simpleServer *SimpleServer) Start() error {
 			PodHandler: &simpleServer.Patcher,
 		},
 	}
-	mux.HandleFunc("/healthz", webhook.HealthHandler)
+	mux.HandleFunc("/healthz", webhook.HealthCheckHandler)
 	mux.HandleFunc("/mutate", admissionHandler.HandleAdmission)
 
 	if simpleServer.Local {
 		return server.ListenAndServe()
-	} else {
-		return server.ListenAndServeTLS(simpleServer.CertFile, simpleServer.KeyFile)
 	}
+	return server.ListenAndServeTLS(simpleServer.CertFile, simpleServer.KeyFile)
 }
 
+// CreateClient Create the server
 func (simpleServer *SimpleServer) CreateClient() (*kubernetes.Clientset, error) {
 	config, err := simpleServer.buildConfig()
 
