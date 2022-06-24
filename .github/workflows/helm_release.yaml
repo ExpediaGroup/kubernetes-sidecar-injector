@@ -87,6 +87,12 @@ jobs:
           skip-tag: 'true'
           commit-message: 'CI: Bump Helm chart version to {{version}} [skip ci]'
 
+      - name: Extract version from package.json
+        uses: sergeysova/jq-action@v2
+        id: version
+        with:
+          cmd: 'jq .version package.json -r'
+
       - name: update Chart.yaml
         if: steps.helm-specific-changes.outputs.any_modified == 'true'
         working-directory: charts/kubernetes-sidecar-injector
@@ -96,6 +102,7 @@ jobs:
           home: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}
           version: ${{ steps.helm-version-bump.outputs.newTag }}
           apiVersion: v2
+          appVersion: "${{ steps.version.outputs.value }}"
           keywords:
             - kubernetes
             - sidecar-injection
