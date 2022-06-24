@@ -15,7 +15,7 @@ import (
 )
 
 // SideCar Kubernetes Sidecar Injector schema
-type SideCar struct {
+type Sidecar struct {
 	Name             string                        `yaml:"name"`
 	InitContainers   []corev1.Container            `yaml:"initContainers"`
 	Containers       []corev1.Container            `yaml:"containers"`
@@ -124,7 +124,7 @@ func (patcher *SidecarInjectorPatcher) PatchPodCreate(ctx context.Context, names
 			} else if err != nil {
 				log.Errorf("error fetching sidecar configmap %s/%s - %v", namespace, configmapSidecarName, err)
 			} else if sidecarsStr, ok := configmapSidecar.Data[patcher.SidecarDataKey]; ok {
-				var sidecars []SideCar
+				var sidecars []Sidecar
 				if err := yaml.Unmarshal([]byte(sidecarsStr), &sidecars); err != nil {
 					log.Errorf("error unmarshalling %s from configmap %s/%s", patcher.SidecarDataKey, pod.GetNamespace(), configmapSidecarName)
 				}
