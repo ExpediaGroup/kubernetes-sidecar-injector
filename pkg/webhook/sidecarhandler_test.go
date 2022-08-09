@@ -569,6 +569,19 @@ func Test_createObjectPatches(t *testing.T) {
 			}},
 		},
 		{
+			name: "test patching empty labels with special characters",
+			args: args{
+				newMap:      map[string]string{"example.com/my": "label"},
+				existingMap: map[string]string{},
+				path:        "/metadata/labels",
+			},
+			want: []admission.PatchOperation{{
+				Op:    "add",
+				Path:  "/metadata/labels/example.com~1my",
+				Value: "label",
+			}},
+		},
+		{
 			name: "test patching nil labels",
 			args: args{
 				newMap:      map[string]string{"my": "label"},
