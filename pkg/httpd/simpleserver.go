@@ -2,6 +2,10 @@ package httpd
 
 import (
 	"fmt"
+	"net/http"
+	"os"
+	"path/filepath"
+
 	"github.com/expediagroup/kubernetes-sidecar-injector/pkg/admission"
 	"github.com/expediagroup/kubernetes-sidecar-injector/pkg/webhook"
 	"github.com/pkg/errors"
@@ -9,9 +13,6 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
-	"net/http"
-	"os"
-	"path/filepath"
 )
 
 /*SimpleServer is the required config to create httpd server*/
@@ -21,6 +22,7 @@ type SimpleServer struct {
 	CertFile string
 	KeyFile  string
 	Patcher  webhook.SidecarInjectorPatcher
+	Debug    bool
 }
 
 /*Start the simple http server supporting TLS*/

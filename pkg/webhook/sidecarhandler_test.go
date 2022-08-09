@@ -582,6 +582,19 @@ func Test_createObjectPatches(t *testing.T) {
 			}},
 		},
 		{
+			name: "test dots",
+			args: args{
+				newMap:      map[string]string{"example.com/my": "label"},
+				existingMap: nil,
+				path:        "/metadata/labels",
+			},
+			want: []admission.PatchOperation{{
+				Op:    "add",
+				Path:  "/metadata/labels",
+				Value: map[string]string{"example.com/my": "label"},
+			}},
+		},
+		{
 			name: "test patching label no override",
 			args: args{
 				newMap:      map[string]string{"my": "label"},
