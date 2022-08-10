@@ -94,6 +94,7 @@ func createObjectPatches(newMap map[string]string, existingMap map[string]string
 	} else {
 		for key, value := range newMap {
 			if _, ok := existingMap[key]; !ok || (ok && override) {
+				key = escapeJSONPath(key)
 				op := "add"
 				if ok {
 					op = "replace"
@@ -107,6 +108,13 @@ func createObjectPatches(newMap map[string]string, existingMap map[string]string
 		}
 	}
 	return patches
+}
+
+// Escape keys that may contain `/`s or `~`s to have a valid patch
+// Order matters here, otherwise `/` --> ~01, instead of ~1
+func escapeJSONPath(k string) string {
+	k = strings.ReplaceAll(k, "~", "~0")
+	return strings.ReplaceAll(k, "/", "~1")
 }
 
 // PatchPodCreate Handle Pod Create Patch

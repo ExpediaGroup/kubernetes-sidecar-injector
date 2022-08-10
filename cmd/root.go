@@ -1,20 +1,25 @@
 package cmd
 
 import (
+	"os"
+
 	"github.com/expediagroup/kubernetes-sidecar-injector/pkg/httpd"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
-	"os"
 )
 
 var (
 	httpdConf httpd.SimpleServer
+	debug     bool
 )
 
 var rootCmd = &cobra.Command{
 	Use:   "kubernetes-sidecar-injector",
 	Short: "Responsible for injecting sidecars into pod containers",
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if debug {
+			log.SetLevel(log.DebugLevel)
+		}
 		log.Infof("SimpleServer starting to listen in port %v", httpdConf.Port)
 		return httpdConf.Start()
 	},
@@ -36,4 +41,5 @@ func init() {
 	rootCmd.Flags().StringVar(&(&httpdConf.Patcher).InjectPrefix, "injectPrefix", "sidecar-injector.expedia.com", "Injector Prefix")
 	rootCmd.Flags().StringVar(&(&httpdConf.Patcher).InjectName, "injectName", "inject", "Injector Name")
 	rootCmd.Flags().StringVar(&(&httpdConf.Patcher).SidecarDataKey, "sidecarDataKey", "sidecars.yaml", "ConfigMap Sidecar Data Key")
+	rootCmd.Flags().BoolVar(&debug, "debug", false, "enable debug logs")
 }
