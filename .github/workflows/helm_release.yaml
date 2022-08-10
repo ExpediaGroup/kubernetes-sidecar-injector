@@ -45,7 +45,7 @@ jobs:
       - name: Automated Code Version Bump
         if: steps.code-specific-changes.outputs.any_modified == 'true'
         id: code-version-bump
-        uses: phips28/gh-action-bump-version@v9
+        uses: phips28/gh-action-bump-version@v9.0.27
         env:
           GITHUB_TOKEN: ${{ secrets.GH_PERSONAL_ACCESS_TOKEN }}
         with:
@@ -79,7 +79,7 @@ jobs:
       - name: Automated Helm Version Bump
         if: steps.helm-specific-changes.outputs.any_modified == 'true'
         id: helm-version-bump
-        uses: phips28/gh-action-bump-version@v9
+        uses: phips28/gh-action-bump-version@v9.0.27
         env:
           GITHUB_TOKEN: ${{ secrets.GH_PERSONAL_ACCESS_TOKEN }}
           PACKAGEJSON_DIR: charts
