@@ -14,7 +14,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
-// SideCar Kubernetes Sidecar Injector schema
+// Sidecar Kubernetes Sidecar Injector schema
 type Sidecar struct {
 	Name             string                        `yaml:"name"`
 	InitContainers   []corev1.Container            `yaml:"initContainers"`
