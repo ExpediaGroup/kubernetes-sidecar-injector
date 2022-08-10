@@ -520,7 +520,7 @@ func Test_createObjectPatches(t *testing.T) {
 			}},
 		},
 		{
-			name: "test patching empty annotation with special characters",
+			name: "test patching empty annotation with forward slash",
 			args: args{
 				newMap:      map[string]string{"example.com/my": "annotation"},
 				existingMap: map[string]string{},
@@ -529,6 +529,19 @@ func Test_createObjectPatches(t *testing.T) {
 			want: []admission.PatchOperation{{
 				Op:    "add",
 				Path:  "/metadata/annotations/example.com~1my",
+				Value: "annotation",
+			}},
+		},
+		{
+			name: "test patching empty annotation with tilde",
+			args: args{
+				newMap:      map[string]string{"example.com~my": "annotation"},
+				existingMap: map[string]string{},
+				path:        "/metadata/annotations",
+			},
+			want: []admission.PatchOperation{{
+				Op:    "add",
+				Path:  "/metadata/annotations/example.com~0my",
 				Value: "annotation",
 			}},
 		},
@@ -582,7 +595,7 @@ func Test_createObjectPatches(t *testing.T) {
 			}},
 		},
 		{
-			name: "test patching empty labels with special characters",
+			name: "test patching empty labels with forward slash",
 			args: args{
 				newMap:      map[string]string{"example.com/my": "label"},
 				existingMap: map[string]string{},
@@ -591,6 +604,19 @@ func Test_createObjectPatches(t *testing.T) {
 			want: []admission.PatchOperation{{
 				Op:    "add",
 				Path:  "/metadata/labels/example.com~1my",
+				Value: "label",
+			}},
+		},
+		{
+			name: "test patching empty labels with tilde",
+			args: args{
+				newMap:      map[string]string{"example.com~my": "label"},
+				existingMap: map[string]string{},
+				path:        "/metadata/labels",
+			},
+			want: []admission.PatchOperation{{
+				Op:    "add",
+				Path:  "/metadata/labels/example.com~0my",
 				Value: "label",
 			}},
 		},
