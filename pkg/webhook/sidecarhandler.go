@@ -2,6 +2,8 @@ package webhook
 
 import (
 	"context"
+	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/expediagroup/kubernetes-sidecar-injector/pkg/admission"
@@ -12,6 +14,10 @@ import (
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
+)
+
+const (
+	skipOnMissingSidecarAnnotation = "skipOnMissingSidecar"
 )
 
 // Sidecar Kubernetes Sidecar Injector schema
@@ -35,8 +41,28 @@ type SidecarInjectorPatcher struct {
 	AllowLabelOverrides      bool
 }
 
-func (patcher *SidecarInjectorPatcher) sideCarInjectionAnnotation() string {
+func (patcher *SidecarInjectorPatcher) sidecarInjectionAnnotation() string {
 	return patcher.InjectPrefix + "/" + patcher.InjectName
+}
+
+func (patcher *SidecarInjectorPatcher) skipOnMissingSidecar(pod corev1.Pod) bool {
+	podName := pod.GetName()
+	if podName == "" {
+		podName = pod.GetGenerateName()
+	}
+	annotations := map[string]string{}
+	if pod.GetAnnotations() != nil {
+		annotations = pod.GetAnnotations()
+	}
+	if skipOnMissingSideCar, ok := annotations[patcher.InjectPrefix+"/"+skipOnMissingSidecarAnnotation]; ok {
+		result, err := strconv.ParseBool(skipOnMissingSideCar)
+		if err != nil {
+			log.Warnf("error parsing bool values from annotation %s - %v", patcher.InjectPrefix+"/"+skipOnMissingSidecarAnnotation, err)
+			return true
+		}
+		return result
+	}
+	return true
 }
 
 func (patcher *SidecarInjectorPatcher) configmapSidecarNames(namespace string, pod corev1.Pod) []string {
@@ -48,7 +74,7 @@ func (patcher *SidecarInjectorPatcher) configmapSidecarNames(namespace string, p
 	if pod.GetAnnotations() != nil {
 		annotations = pod.GetAnnotations()
 	}
-	if sidecars, ok := annotations[patcher.sideCarInjectionAnnotation()]; ok {
+	if sidecars, ok := annotations[patcher.sidecarInjectionAnnotation()]; ok {
 		parts := lo.Map[string, string](strings.Split(sidecars, ","), func(part string, _ int) string {
 			return strings.TrimSpace(part)
 		})
@@ -125,10 +151,15 @@ func (patcher *SidecarInjectorPatcher) PatchPodCreate(ctx context.Context, names
 	}
 	var patches []admission.PatchOperation
 	if configmapSidecarNames := patcher.configmapSidecarNames(namespace, pod); configmapSidecarNames != nil {
+		skipOnMissing := patcher.skipOnMissingSidecar(pod)
 		for _, configmapSidecarName := range configmapSidecarNames {
 			configmapSidecar, err := patcher.K8sClient.CoreV1().ConfigMaps(namespace).Get(ctx, configmapSidecarName, metav1.GetOptions{})
 			if k8serrors.IsNotFound(err) {
-				log.Warnf("sidecar configmap %s/%s was not found", namespace, configmapSidecarName)
+				if skipOnMissing {
+					log.Warnf("sidecar configmap %s/%s was not found", namespace, configmapSidecarName)
+				} else {
+					return nil, fmt.Errorf("sidecar configmap %s/%s was not found", namespace, configmapSidecarName)
+				}
 			} else if err != nil {
 				log.Errorf("error fetching sidecar configmap %s/%s - %v", namespace, configmapSidecarName, err)
 			} else if sidecarsStr, ok := configmapSidecar.Data[patcher.SidecarDataKey]; ok {

@@ -429,7 +429,7 @@ func TestSidecarInjectorPatcher_sideCarInjectionAnnotation(t *testing.T) {
 				InjectPrefix: tt.fields.InjectPrefix,
 				InjectName:   tt.fields.InjectName,
 			}
-			assert.Equalf(t, tt.want, patcher.sideCarInjectionAnnotation(), "sideCarInjectionAnnotation()")
+			assert.Equalf(t, tt.want, patcher.sidecarInjectionAnnotation(), "sidecarInjectionAnnotation()")
 		})
 	}
 }
@@ -662,6 +662,96 @@ func Test_createObjectPatches(t *testing.T) {
 			if got := createObjectPatches(tt.args.newMap, tt.args.existingMap, tt.args.path, tt.args.override); !reflect.DeepEqual(got, tt.want) {
 				assert.Fail(t, "annotation patching failed", "createObjectPatches() = %v, want %v", got, tt.want)
 			}
+		})
+	}
+}
+
+func TestSideCarInjectorPatcher_skipOnMissingSideCar(t *testing.T) {
+	type fields struct {
+		K8sClient                kubernetes.Interface
+		InjectPrefix             string
+		InjectName               string
+		SidecarDataKey           string
+		AllowAnnotationOverrides bool
+		AllowLabelOverrides      bool
+	}
+	type args struct {
+		pod v1.Pod
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		args   args
+		want   bool
+	}{
+		{
+			name: "test skipOnMissingSidecar false",
+			fields: fields{
+				K8sClient:    fake.NewSimpleClientset(),
+				InjectPrefix: "sidecar-injector.expedia.com",
+			},
+			args: args{
+				pod: v1.Pod{ObjectMeta: metav1.ObjectMeta{
+					Annotations: map[string]string{
+						"sidecar-injector.expedia.com/skipOnMissingSidecar": "false",
+					},
+				}},
+			},
+			want: false,
+		},
+		{
+			name: "test skipOnMissingSidecar missing",
+			fields: fields{
+				K8sClient:    fake.NewSimpleClientset(),
+				InjectPrefix: "sidecar-injector.expedia.com",
+			},
+			args: args{
+				pod: v1.Pod{},
+			},
+			want: true,
+		},
+		{
+			name: "test skipOnMissingSidecar true",
+			fields: fields{
+				K8sClient:    fake.NewSimpleClientset(),
+				InjectPrefix: "sidecar-injector.expedia.com",
+			},
+			args: args{
+				pod: v1.Pod{ObjectMeta: metav1.ObjectMeta{
+					Annotations: map[string]string{
+						"sidecar-injector.expedia.com/skipOnMissingSidecar": "true",
+					},
+				}},
+			},
+			want: true,
+		},
+		{
+			name: "test skipOnMissingSidecar bad value",
+			fields: fields{
+				K8sClient:    fake.NewSimpleClientset(),
+				InjectPrefix: "sidecar-injector.expedia.com",
+			},
+			args: args{
+				pod: v1.Pod{ObjectMeta: metav1.ObjectMeta{
+					Annotations: map[string]string{
+						"sidecar-injector.expedia.com/skipOnMissingSidecar": "garbage",
+					},
+				}},
+			},
+			want: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			patcher := &SidecarInjectorPatcher{
+				K8sClient:                tt.fields.K8sClient,
+				InjectPrefix:             tt.fields.InjectPrefix,
+				InjectName:               tt.fields.InjectName,
+				SidecarDataKey:           tt.fields.SidecarDataKey,
+				AllowAnnotationOverrides: tt.fields.AllowAnnotationOverrides,
+				AllowLabelOverrides:      tt.fields.AllowLabelOverrides,
+			}
+			assert.Equalf(t, tt.want, patcher.skipOnMissingSidecar(tt.args.pod), "skipOnMissingSidecar(%v)", tt.args.pod)
 		})
 	}
 }
