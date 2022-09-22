@@ -56,5 +56,8 @@ follow-logs:
 install-sample-container:
 	helm upgrade -i inject-container ./sample/chart/echo-server/. --namespace=sample --create-namespace
 
+install-fail-on-missing:
+	helm upgrade -i inject-container ./sample/chart/echo-server-fail-on-missing/. --namespace=sample --create-namespace
+
 install-sample-init-container:
 	helm upgrade -i inject-init-container ./sample/chart/nginx/. --namespace=sample --create-namespace

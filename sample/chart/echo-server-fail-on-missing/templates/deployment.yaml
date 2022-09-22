@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Chart.Name }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: {{ .Chart.Name }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ .Chart.Name }}
+  template:
+    metadata:
+      annotations:
+        sidecar-injector.expedia.com/inject: "missing-sidecar"
+        sidecar-injector.expedia.com/skipOnMissing: "false"
+      labels:
+        app.kubernetes.io/name: {{ .Chart.Name }}
+    spec:
+      serviceAccountName: {{ .Chart.Name }}
+      containers:
+        - name: echo-server
+          image: hashicorp/http-echo:alpine
+          imagePullPolicy: IfNotPresent
+          args:
+            - -listen=:8080
+            - -text="hello world"

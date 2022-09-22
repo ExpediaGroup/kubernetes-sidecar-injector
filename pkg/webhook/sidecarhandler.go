@@ -17,7 +17,7 @@ import (
 )
 
 const (
-	skipOnMissingSidecarAnnotation = "skipOnMissingSidecar"
+	skipOnMissingAnnotation = "skipOnMissing"
 )
 
 // Sidecar Kubernetes Sidecar Injector schema
@@ -54,10 +54,10 @@ func (patcher *SidecarInjectorPatcher) skipOnMissingSidecar(pod corev1.Pod) bool
 	if pod.GetAnnotations() != nil {
 		annotations = pod.GetAnnotations()
 	}
-	if skipOnMissingSideCar, ok := annotations[patcher.InjectPrefix+"/"+skipOnMissingSidecarAnnotation]; ok {
+	if skipOnMissingSideCar, ok := annotations[patcher.InjectPrefix+"/"+skipOnMissingAnnotation]; ok {
 		result, err := strconv.ParseBool(skipOnMissingSideCar)
 		if err != nil {
-			log.Warnf("error parsing bool values from annotation %s - %v", patcher.InjectPrefix+"/"+skipOnMissingSidecarAnnotation, err)
+			log.Warnf("error parsing bool values from annotation %s - %v", patcher.InjectPrefix+"/"+skipOnMissingAnnotation, err)
 			return true
 		}
 		return result
@@ -152,6 +152,7 @@ func (patcher *SidecarInjectorPatcher) PatchPodCreate(ctx context.Context, names
 	var patches []admission.PatchOperation
 	if configmapSidecarNames := patcher.configmapSidecarNames(namespace, pod); configmapSidecarNames != nil {
 		skipOnMissing := patcher.skipOnMissingSidecar(pod)
+		log.Infof("skipOnMissing: %t", skipOnMissing)
 		for _, configmapSidecarName := range configmapSidecarNames {
 			configmapSidecar, err := patcher.K8sClient.CoreV1().ConfigMaps(namespace).Get(ctx, configmapSidecarName, metav1.GetOptions{})
 			if k8serrors.IsNotFound(err) {
