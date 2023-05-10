@@ -49,9 +49,9 @@ data:
 
 1. Deploy this mutating webhook by cloning this repository and running the following command (needs kubectl installed and configured to point to the kubernetes cluster or minikube)
 
-```bash
-make helm-install
-```
+    ```bash
+    make helm-install
+    ```
 
 2. By default, all namespaces are watched except `kube-system` and `kube-public`. This can be configured in your [helm values](charts/kubernetes-sidecar-injector/values.yaml#L13-L19).
 
