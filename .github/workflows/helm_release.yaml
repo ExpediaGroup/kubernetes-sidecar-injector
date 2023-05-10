@@ -68,6 +68,7 @@ jobs:
         with:
           push: true
           tags: ${{ steps.github-repository.outputs.lowercase }}:${{ steps.code-version-bump.outputs.newTag }},${{ steps.github-repository.outputs.lowercase }}:latest
+          platforms: linux/amd64,linux/arm64
 
       - name: Get specific changed files
         id: helm-specific-changes
