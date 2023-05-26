@@ -1,0 +1,5 @@
+name: inject-container-fail-on-missing
+home: https://github.com/expediagroup/kubernetes-sidecar-injector
+version: 0.0.1
+appVersion: "0.1"
+apiVersion:
