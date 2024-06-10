@@ -9,6 +9,7 @@ import (
 	"github.com/expediagroup/kubernetes-sidecar-injector/pkg/admission"
 	"github.com/expediagroup/kubernetes-sidecar-injector/pkg/webhook"
 	"github.com/pkg/errors"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	log "github.com/sirupsen/logrus"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
@@ -48,10 +49,24 @@ func (simpleServer *SimpleServer) Start() error {
 	mux.HandleFunc("/healthz", webhook.HealthCheckHandler)
 	mux.HandleFunc("/mutate", admissionHandler.HandleAdmission)
 
+	addr := ":9090"
+	startMetricsServer(addr)
+
 	if simpleServer.Local {
 		return server.ListenAndServe()
 	}
 	return server.ListenAndServeTLS(simpleServer.CertFile, simpleServer.KeyFile)
+}
+
+func startMetricsServer(addr string) {
+	log.Infoln(fmt.Sprintf("Starting metrics server on %s", addr))
+	metricsRouter := http.NewServeMux()
+	metricsRouter.Handle("/metrics", promhttp.Handler())
+	metricsServer := &http.Server{
+		Addr:    addr,
+		Handler: metricsRouter,
+	}
+	log.Fatal(metricsServer.ListenAndServe())
 }
 
 // CreateClient Create the server

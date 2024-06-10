@@ -3,7 +3,7 @@
     <module name="kubernetes-sidecar-injector" />
     <working_directory value="$PROJECT_DIR$" />
     <parameters value="--port=8080 --local=true" />
-    <kind value="PACKAGE" />
+    <kind value="DIRECTORY" />
     <package value="github.com/expediagroup/kubernetes-sidecar-injector" />
     <directory value="$PROJECT_DIR$" />
     <filePath value="$PROJECT_DIR$/main.go" />
