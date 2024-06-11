@@ -7,8 +7,13 @@ metadata:
     {{- include "common.labels" . | indent 4 }}
 spec:
   ports:
-  - name: https
-    port: {{ .Values.service.port }}
-    targetPort: https
+    - name: https
+      port: {{ .Values.service.port }}
+      targetPort: https
+  {{- if ne .Values.service.port .Values.service.metricsPort }}
+    - name: metrics
+      port: {{ .Values.service.metricsPort }}
+      targetPort: metrics
+  {{- end }}
   selector:
     {{- include "common.labels" . | indent 4 }}

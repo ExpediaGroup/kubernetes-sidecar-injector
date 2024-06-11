@@ -12,6 +12,7 @@ service:
 
 container:
   port: 8443
+  metricsPort: 8443
 
 podAnnotations: {}
 podLabels: {}
