@@ -8,7 +8,7 @@ replicaCount: 1
 
 service:
   port: 443
-  metricsPort: 9090
+  metricsPort: 443
 
 container:
   port: 8443

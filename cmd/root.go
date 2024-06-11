@@ -35,6 +35,7 @@ func Execute() {
 
 func init() {
 	rootCmd.Flags().IntVar(&httpdConf.Port, "port", 443, "server port.")
+	rootCmd.Flags().IntVar(&httpdConf.MetricsPort, "metricsPort", httpdConf.Port, "metrics server port.")
 	rootCmd.Flags().StringVar(&httpdConf.CertFile, "certFile", "/etc/mutator/certs/cert.pem", "File containing tls certificate")
 	rootCmd.Flags().StringVar(&httpdConf.KeyFile, "keyFile", "/etc/mutator/certs/key.pem", "File containing tls private key")
 	rootCmd.Flags().BoolVar(&httpdConf.Local, "local", false, "Local run mode")

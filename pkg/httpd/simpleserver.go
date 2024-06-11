@@ -20,11 +20,11 @@ import (
 type SimpleServer struct {
 	Local       bool
 	Port        int
+	MetricsPort int
 	CertFile    string
 	KeyFile     string
 	Patcher     webhook.SidecarInjectorPatcher
 	Debug       bool
-	MetricsPort *int
 }
 
 /*Start the simple http server supporting TLS*/
@@ -50,10 +50,11 @@ func (simpleServer *SimpleServer) Start() error {
 	mux.HandleFunc("/healthz", webhook.HealthCheckHandler)
 	mux.HandleFunc("/mutate", admissionHandler.HandleAdmission)
 
-	if simpleServer.MetricsPort != nil && *simpleServer.MetricsPort != simpleServer.Port {
-		go startMetricsServer(fmt.Sprintf(":%d", *simpleServer.MetricsPort))
+	metricsHandler := promhttp.Handler()
+	if simpleServer.MetricsPort != simpleServer.Port {
+		go simpleServer.startMetricsServer(metricsHandler)
 	} else {
-		mux.Handle("/metrics", promhttp.Handler())
+		mux.Handle("/metrics", metricsHandler)
 	}
 
 	if simpleServer.Local {
@@ -62,14 +63,16 @@ func (simpleServer *SimpleServer) Start() error {
 	return server.ListenAndServeTLS(simpleServer.CertFile, simpleServer.KeyFile)
 }
 
-func startMetricsServer(addr string) {
-	log.Infoln(fmt.Sprintf("Starting metrics server on %s", addr))
+func (simpleServer *SimpleServer) startMetricsServer(metricsHandler http.Handler) {
+	log.Printf("Starting metrics server on port %d\n", simpleServer.MetricsPort)
 	metricsRouter := http.NewServeMux()
-	metricsRouter.Handle("/metrics", promhttp.Handler())
+	metricsRouter.Handle("/metrics", metricsHandler)
+
 	metricsServer := &http.Server{
-		Addr:    addr,
+		Addr:    fmt.Sprintf(":%d", simpleServer.MetricsPort),
 		Handler: metricsRouter,
 	}
+
 	if err := metricsServer.ListenAndServe(); err != nil {
 		log.Fatal("Failed to start metrics server:", err)
 	}
