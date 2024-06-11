@@ -108,6 +108,7 @@ spec:
             - --injectPrefix={{ trimSuffix "/" .Values.selectors.injectPrefix }}
             - --injectName={{ .Values.selectors.injectName }}
             - --sidecarDataKey={{ .Values.sidecars.dataKey }}
+            - --metricsPort={{ .Values.service.metricsPort }}
           volumeMounts:
             - name: {{ .Release.Name }}-certs
               mountPath: /opt/kubernetes-sidecar-injector/certs

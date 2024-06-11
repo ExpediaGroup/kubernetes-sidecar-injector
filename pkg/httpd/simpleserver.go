@@ -18,12 +18,13 @@ import (
 
 /*SimpleServer is the required config to create httpd server*/
 type SimpleServer struct {
-	Local    bool
-	Port     int
-	CertFile string
-	KeyFile  string
-	Patcher  webhook.SidecarInjectorPatcher
-	Debug    bool
+	Local       bool
+	Port        int
+	CertFile    string
+	KeyFile     string
+	Patcher     webhook.SidecarInjectorPatcher
+	Debug       bool
+	MetricsPort *int
 }
 
 /*Start the simple http server supporting TLS*/
@@ -49,8 +50,11 @@ func (simpleServer *SimpleServer) Start() error {
 	mux.HandleFunc("/healthz", webhook.HealthCheckHandler)
 	mux.HandleFunc("/mutate", admissionHandler.HandleAdmission)
 
-	addr := ":9090"
-	startMetricsServer(addr)
+	if simpleServer.MetricsPort != nil && *simpleServer.MetricsPort != simpleServer.Port {
+		go startMetricsServer(fmt.Sprintf(":%d", *simpleServer.MetricsPort))
+	} else {
+		mux.Handle("/metrics", promhttp.Handler())
+	}
 
 	if simpleServer.Local {
 		return server.ListenAndServe()
@@ -66,7 +70,9 @@ func startMetricsServer(addr string) {
 		Addr:    addr,
 		Handler: metricsRouter,
 	}
-	log.Fatal(metricsServer.ListenAndServe())
+	if err := metricsServer.ListenAndServe(); err != nil {
+		log.Fatal("Failed to start metrics server:", err)
+	}
 }
 
 // CreateClient Create the server

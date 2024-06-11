@@ -1,7 +1,7 @@
 module github.com/expediagroup/kubernetes-sidecar-injector
 
 // Make sure you change the Dockerfile
-go 1.18
+go 1.21
 
 require (
 	github.com/ghodss/yaml v1.0.0
