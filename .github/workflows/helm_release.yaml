@@ -10,17 +10,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - id: github-repository
-        uses: ASzc/change-string-case-action@v2
+        uses: ASzc/change-string-case-action@v6
         with:
           string: ${{ github.repository }}
 
       - name: Set up Go ^1.21
-        uses: actions/setup-go@v3
+        uses: actions/setup-go@v5
         with:
           go-version: ^1.21
 
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
           token: ${{ secrets.GH_PERSONAL_ACCESS_TOKEN }}
@@ -35,7 +35,7 @@ jobs:
 
       - name: Code specific changes
         id: code-specific-changes
-        uses: tj-actions/changed-files@v23
+        uses: tj-actions/changed-files@v44
         with:
           files_ignore: |
             charts
@@ -45,7 +45,7 @@ jobs:
       - name: Automated Code Version Bump
         if: steps.code-specific-changes.outputs.any_modified == 'true'
         id: code-version-bump
-        uses: phips28/gh-action-bump-version@v9.0.27
+        uses: phips28/gh-action-bump-version@v11.0.4
         env:
           GITHUB_TOKEN: ${{ secrets.GH_PERSONAL_ACCESS_TOKEN }}
         with:
@@ -53,18 +53,18 @@ jobs:
 
       - name: Set up Docker Buildx
         if: steps.code-specific-changes.outputs.any_modified == 'true'
-        uses: docker/setup-buildx-action@v1
+        uses: docker/setup-buildx-action@v3
 
       - name: Login to DockerHub
         if: steps.code-specific-changes.outputs.any_modified == 'true'
-        uses: docker/login-action@v1
+        uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKER_HUB_USERNAME }}
           password: ${{ secrets.DOCKER_HUB_PASSWORD }}
 
       - name: Build and push merge to main
         if: steps.code-specific-changes.outputs.any_modified == 'true'
-        uses: docker/build-push-action@v2
+        uses: docker/build-push-action@v5
         with:
           push: true
           tags: ${{ steps.github-repository.outputs.lowercase }}:${{ steps.code-version-bump.outputs.newTag }},${{ steps.github-repository.outputs.lowercase }}:latest
@@ -72,7 +72,7 @@ jobs:
 
       - name: Get specific changed files
         id: helm-specific-changes
-        uses: tj-actions/changed-files@v23
+        uses: tj-actions/changed-files@v44
         with:
           files: |
             charts/kubernetes-sidecar-injector
@@ -80,7 +80,7 @@ jobs:
       - name: Automated Helm Version Bump
         if: steps.helm-specific-changes.outputs.any_modified == 'true'
         id: helm-version-bump
-        uses: phips28/gh-action-bump-version@v9.0.27
+        uses: phips28/gh-action-bump-version@v11.0.4
         env:
           GITHUB_TOKEN: ${{ secrets.GH_PERSONAL_ACCESS_TOKEN }}
           PACKAGEJSON_DIR: charts
@@ -113,18 +113,18 @@ jobs:
 
       - name: commit the new Chart.yml
         if: steps.helm-specific-changes.outputs.any_modified == 'true'
-        uses: stefanzweifel/git-auto-commit-action@v4
+        uses: stefanzweifel/git-auto-commit-action@v5
         with:
           commit_message: Automated Change [skip ci]
 
       - name: Install Helm
         if: steps.helm-specific-changes.outputs.any_modified == 'true'
-        uses: azure/setup-helm@v1
+        uses: azure/setup-helm@v4
         with:
           version: v3.8.0
 
       - name: Run chart-releaser
         if: steps.helm-specific-changes.outputs.any_modified == 'true'
-        uses: helm/chart-releaser-action@v1.3.0
+        uses: helm/chart-releaser-action@v1.6.0
         env:
           CR_TOKEN: "${{ secrets.GH_PERSONAL_ACCESS_TOKEN }}"

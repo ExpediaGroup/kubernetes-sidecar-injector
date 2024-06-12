@@ -6,7 +6,7 @@ import (
 	"errors"
 	"fmt"
 	log "github.com/sirupsen/logrus"
-	"io/ioutil"
+	"io"
 	admissionv1 "k8s.io/api/admission/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"net/http"
@@ -102,7 +102,7 @@ func validateRequest(req *http.Request) error {
 }
 
 func readRequestBody(req *http.Request) ([]byte, error) {
-	body, err := ioutil.ReadAll(req.Body)
+	body, err := io.ReadAll(req.Body)
 	if err != nil {
 		return nil, fmt.Errorf("unable to read Request Body: %v", err)
 	}
@@ -130,7 +130,6 @@ func (handler *Handler) writeDeniedAdmissionResponse(ar *admissionv1.AdmissionRe
 func (handler *Handler) writeErrorAdmissionReview(status int, message string, res http.ResponseWriter) {
 	admResp := handler.errorAdmissionReview(status, message)
 	handler.write(admResp, res)
-	return
 }
 
 func (handler *Handler) errorAdmissionReview(httpErrorCode int, message string) *admissionv1.AdmissionReview {

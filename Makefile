@@ -8,7 +8,7 @@ KIND_CLUSTER?=cluster1
 SRC=$(shell find . -type f -name '*.go' -not -path "./vendor/*")
 
 lint:
-	go list ./... | xargs golint -min_confidence 1.0 
+	staticcheck ./...
 
 vet:
 	go vet ./...
