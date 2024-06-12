@@ -8,11 +8,11 @@ replicaCount: 1
 
 service:
   port: 443
-  metricsPort: 443
+  metricsPort: 9090
 
 container:
   port: 8443
-  metricsPort: 8443
+  metricsPort: 9090
 
 podAnnotations: {}
 podLabels: {}
