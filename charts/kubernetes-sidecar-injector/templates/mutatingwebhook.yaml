@@ -103,7 +103,7 @@ spec:
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           args:
             - --port={{ .Values.container.port }}
-            - --metricsPort={{ .Values.service.metricsPort }}
+            - --metricsPort={{ .Values.container.metricsPort }}
             - --certFile=/opt/kubernetes-sidecar-injector/certs/cert.pem
             - --keyFile=/opt/kubernetes-sidecar-injector/certs/key.pem
             - --injectPrefix={{ trimSuffix "/" .Values.selectors.injectPrefix }}
