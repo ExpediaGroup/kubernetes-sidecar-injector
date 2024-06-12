@@ -14,10 +14,10 @@ jobs:
         with:
           string: ${{ github.repository }}
 
-      - name: Set up Go ^1.18
+      - name: Set up Go ^1.21
         uses: actions/setup-go@v3
         with:
-          go-version: ^1.18
+          go-version: ^1.21
 
       - name: Checkout
         uses: actions/checkout@v3

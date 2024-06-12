@@ -1,4 +1,4 @@
-FROM golang:1.18 as build
+FROM golang:1.21 as build
 RUN go install golang.org/x/lint/golint@latest
 WORKDIR /build
 COPY . ./

@@ -9,6 +9,7 @@ import (
 	"github.com/expediagroup/kubernetes-sidecar-injector/pkg/admission"
 	"github.com/expediagroup/kubernetes-sidecar-injector/pkg/webhook"
 	"github.com/pkg/errors"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	log "github.com/sirupsen/logrus"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
@@ -17,12 +18,13 @@ import (
 
 /*SimpleServer is the required config to create httpd server*/
 type SimpleServer struct {
-	Local    bool
-	Port     int
-	CertFile string
-	KeyFile  string
-	Patcher  webhook.SidecarInjectorPatcher
-	Debug    bool
+	Local       bool
+	Port        int
+	MetricsPort int
+	CertFile    string
+	KeyFile     string
+	Patcher     webhook.SidecarInjectorPatcher
+	Debug       bool
 }
 
 /*Start the simple http server supporting TLS*/
@@ -48,10 +50,32 @@ func (simpleServer *SimpleServer) Start() error {
 	mux.HandleFunc("/healthz", webhook.HealthCheckHandler)
 	mux.HandleFunc("/mutate", admissionHandler.HandleAdmission)
 
+	metricsHandler := promhttp.Handler()
+	if simpleServer.MetricsPort != simpleServer.Port {
+		go simpleServer.startMetricsServer(metricsHandler)
+	} else {
+		mux.Handle("/metrics", metricsHandler)
+	}
+
 	if simpleServer.Local {
 		return server.ListenAndServe()
 	}
 	return server.ListenAndServeTLS(simpleServer.CertFile, simpleServer.KeyFile)
+}
+
+func (simpleServer *SimpleServer) startMetricsServer(metricsHandler http.Handler) {
+	log.Printf("Starting metrics server on port %d\n", simpleServer.MetricsPort)
+	metricsRouter := http.NewServeMux()
+	metricsRouter.Handle("/metrics", metricsHandler)
+
+	metricsServer := &http.Server{
+		Addr:    fmt.Sprintf(":%d", simpleServer.MetricsPort),
+		Handler: metricsRouter,
+	}
+
+	if err := metricsServer.ListenAndServe(); err != nil {
+		log.Fatal("Failed to start metrics server:", err)
+	}
 }
 
 // CreateClient Create the server

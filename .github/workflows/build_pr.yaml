@@ -6,12 +6,13 @@ on:
       - main
 jobs:
   build:
+    name: Build PR
     runs-on: ubuntu-latest
     steps:
-      - name: Set up Go ^1.18
+      - name: Set up Go ^1.21
         uses: actions/setup-go@v3
         with:
-          go-version: ^1.18
+          go-version: ^1.21
 
       - uses: actions/checkout@v3
 

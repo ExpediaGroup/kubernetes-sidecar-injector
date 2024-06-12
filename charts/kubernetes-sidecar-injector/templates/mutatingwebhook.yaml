@@ -103,6 +103,7 @@ spec:
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           args:
             - --port={{ .Values.container.port }}
+            - --metricsPort={{ .Values.container.metricsPort }}
             - --certFile=/opt/kubernetes-sidecar-injector/certs/cert.pem
             - --keyFile=/opt/kubernetes-sidecar-injector/certs/key.pem
             - --injectPrefix={{ trimSuffix "/" .Values.selectors.injectPrefix }}
@@ -116,6 +117,11 @@ spec:
             - name: https
               containerPort: {{ .Values.container.port }}
               protocol: TCP
+            {{- if ne .Values.container.port .Values.container.metricsPort }}
+            - name: metrics
+              containerPort: {{ .Values.container.metricsPort }}
+              protocol: TCP
+            {{- end }}
           livenessProbe:
             httpGet:
               path: /healthz
