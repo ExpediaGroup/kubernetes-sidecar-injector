@@ -7,7 +7,7 @@ on:
 
 jobs:
   release:
-    name: Release
+    name: Tester
     runs-on: ubuntu-latest
     steps:
       - id: github-repository
@@ -29,9 +29,9 @@ jobs:
       - name: Get specific changed files
         id: helm-specific-changes
         uses: tj-actions/changed-files@v44
-        with:
-          files: |
-            charts/kubernetes-sidecar-injector
+#        with:
+#          files: |
+#            charts/kubernetes-sidecar-injector
     
       - name: List all changed files markdown files
         if: steps.helm-specific-changes.outputs.any_changed == 'true'
