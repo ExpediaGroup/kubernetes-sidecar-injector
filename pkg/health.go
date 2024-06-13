@@ -1,4 +1,4 @@
-package webhook
+package pkg
 
 import "net/http"
 

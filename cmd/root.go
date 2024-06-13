@@ -1,15 +1,15 @@
 package cmd
 
 import (
+	"github.com/expediagroup/kubernetes-sidecar-injector/pkg"
 	"os"
 
-	"github.com/expediagroup/kubernetes-sidecar-injector/pkg/httpd"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
 
 var (
-	httpdConf httpd.SimpleServer
+	httpdConf pkg.SimpleServer
 	debug     bool
 )
 
@@ -36,11 +36,12 @@ func Execute() {
 func init() {
 	rootCmd.Flags().IntVar(&httpdConf.Port, "port", 443, "server port.")
 	rootCmd.Flags().IntVar(&httpdConf.MetricsPort, "metricsPort", 9090, "metrics server port.")
-	rootCmd.Flags().StringVar(&httpdConf.CertFile, "certFile", "/etc/mutator/certs/cert.pem", "File containing tls certificate")
-	rootCmd.Flags().StringVar(&httpdConf.KeyFile, "keyFile", "/etc/mutator/certs/key.pem", "File containing tls private key")
+	rootCmd.Flags().StringVar(&httpdConf.CertDir, "certDir", "/etc/mutator/certs/", "The directory that contains the server key and certificate")
+	rootCmd.Flags().StringVar(&httpdConf.CertName, "certName", "tls.crt", "The server certificate name")
+	rootCmd.Flags().StringVar(&httpdConf.KeyName, "keyName", "tls.key", "The server key name")
 	rootCmd.Flags().BoolVar(&httpdConf.Local, "local", false, "Local run mode")
-	rootCmd.Flags().StringVar(&(&httpdConf.Patcher).InjectPrefix, "injectPrefix", "sidecar-injector.expedia.com", "Injector Prefix")
-	rootCmd.Flags().StringVar(&(&httpdConf.Patcher).InjectName, "injectName", "inject", "Injector Name")
-	rootCmd.Flags().StringVar(&(&httpdConf.Patcher).SidecarDataKey, "sidecarDataKey", "sidecars.yaml", "ConfigMap Sidecar Data Key")
+	rootCmd.Flags().StringVar(&(&httpdConf.SidecarInjector).InjectPrefix, "injectPrefix", "sidecar-injector.expedia.com", "Injector Prefix")
+	rootCmd.Flags().StringVar(&(&httpdConf.SidecarInjector).InjectName, "injectName", "inject", "Injector Name")
+	rootCmd.Flags().StringVar(&(&httpdConf.SidecarInjector).SidecarDataKey, "sidecarDataKey", "sidecars.yaml", "ConfigMap Sidecar Data Key")
 	rootCmd.Flags().BoolVar(&debug, "debug", false, "enable debug logs")
 }

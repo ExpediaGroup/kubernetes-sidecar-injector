@@ -12,8 +12,8 @@ metadata:
   labels:
     {{- include "common.labels" . | indent 4 }}
 data:
-  cert.pem: {{ b64enc $cert.Cert }}
-  key.pem: {{ b64enc $cert.Key }}
+  tls.crt: {{ b64enc $cert.Cert }}
+  tls.key: {{ b64enc $cert.Key }}
 ---
 apiVersion: admissionregistration.k8s.io/v1
 kind: MutatingWebhookConfiguration
@@ -27,7 +27,7 @@ webhooks:
       service:
         name: {{ .Release.Name }}
         namespace: {{ .Release.Namespace }}
-        path: "/mutate"
+        path: "/mutate-v1-pod"
       caBundle: {{ b64enc $ca.Cert }}
     failurePolicy: Fail
     sideEffects: None
@@ -104,8 +104,7 @@ spec:
           args:
             - --port={{ .Values.container.port }}
             - --metricsPort={{ .Values.container.metricsPort }}
-            - --certFile=/opt/kubernetes-sidecar-injector/certs/cert.pem
-            - --keyFile=/opt/kubernetes-sidecar-injector/certs/key.pem
+            - --certDir=/opt/kubernetes-sidecar-injector/certs/
             - --injectPrefix={{ trimSuffix "/" .Values.selectors.injectPrefix }}
             - --injectName={{ .Values.selectors.injectName }}
             - --sidecarDataKey={{ .Values.sidecars.dataKey }}
