@@ -31,7 +31,7 @@ jobs:
         uses: tj-actions/changed-files@v44
         with:
           files: |
-            charts/kubernetes-sidecar-injector
+            charts/kubernetes-sidecar-injector/**
     
       - name: List all changed files markdown files
         if: steps.helm-specific-changes.outputs.any_changed == 'true'
