@@ -15,9 +15,7 @@ container:
   metricsPort: 9090
 
 podAnnotations: {}
-
 podLabels: {}
-
 podSecurityContext: {}
 
 sidecars:
