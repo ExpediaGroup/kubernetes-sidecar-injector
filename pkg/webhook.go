@@ -5,7 +5,12 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
+	"k8s.io/client-go/tools/clientcmd"
 	"net/http"
+	"os"
+	"path/filepath"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
@@ -39,6 +44,14 @@ type SimpleServer struct {
 func (server *SimpleServer) Start() error {
 	ctrl.SetLogger(zap.New(zap.UseDevMode(server.Debug)))
 
+	if config, err := server.buildConfig(); err != nil {
+		return err
+	} else if clientset, err := kubernetes.NewForConfig(config); err != nil {
+		return err
+	} else if err := server.SidecarInjector.InjectClient(clientset); err != nil {
+		return err
+	}
+
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
 		Scheme:             scheme,
 		MetricsBindAddress: fmt.Sprintf(":%d", server.MetricsPort),
@@ -54,7 +67,7 @@ func (server *SimpleServer) Start() error {
 	hookServer.CertName = server.CertName
 	hookServer.KeyName = server.KeyName
 	hookServer.Register("/mutate-v1-pod", &crwebhook.Admission{
-		Handler: &SidecarInjector{},
+		Handler: &server.SidecarInjector,
 	})
 	hookServer.Register("/healthz", http.HandlerFunc(HealthCheckHandler))
 
@@ -64,4 +77,14 @@ func (server *SimpleServer) Start() error {
 	}
 
 	return nil
+}
+
+func (server *SimpleServer) buildConfig() (*rest.Config, error) {
+	if server.Local {
+		log.Debug("Using local kubeconfig.")
+		kubeConfig := filepath.Join(os.Getenv("HOME"), ".kube", "config")
+		return clientcmd.BuildConfigFromFlags("", kubeConfig)
+	}
+	log.Debug("Using in cluster kubeconfig.")
+	return rest.InClusterConfig()
 }

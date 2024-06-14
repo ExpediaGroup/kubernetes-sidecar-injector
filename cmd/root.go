@@ -9,8 +9,8 @@ import (
 )
 
 var (
-	httpdConf pkg.SimpleServer
-	debug     bool
+	server pkg.SimpleServer
+	debug  bool
 )
 
 var rootCmd = &cobra.Command{
@@ -20,8 +20,8 @@ var rootCmd = &cobra.Command{
 		if debug {
 			log.SetLevel(log.DebugLevel)
 		}
-		log.Infof("SimpleServer starting to listen in port %v", httpdConf.Port)
-		return httpdConf.Start()
+		log.Infof("SimpleServer starting to listen in port %v", server.Port)
+		return server.Start()
 	},
 }
 
@@ -34,14 +34,16 @@ func Execute() {
 }
 
 func init() {
-	rootCmd.Flags().IntVar(&httpdConf.Port, "port", 443, "server port.")
-	rootCmd.Flags().IntVar(&httpdConf.MetricsPort, "metricsPort", 9090, "metrics server port.")
-	rootCmd.Flags().StringVar(&httpdConf.CertDir, "certDir", "/etc/mutator/certs/", "The directory that contains the server key and certificate")
-	rootCmd.Flags().StringVar(&httpdConf.CertName, "certName", "tls.crt", "The server certificate name")
-	rootCmd.Flags().StringVar(&httpdConf.KeyName, "keyName", "tls.key", "The server key name")
-	rootCmd.Flags().BoolVar(&httpdConf.Local, "local", false, "Local run mode")
-	rootCmd.Flags().StringVar(&(&httpdConf.SidecarInjector).InjectPrefix, "injectPrefix", "sidecar-injector.expedia.com", "Injector Prefix")
-	rootCmd.Flags().StringVar(&(&httpdConf.SidecarInjector).InjectName, "injectName", "inject", "Injector Name")
-	rootCmd.Flags().StringVar(&(&httpdConf.SidecarInjector).SidecarDataKey, "sidecarDataKey", "sidecars.yaml", "ConfigMap Sidecar Data Key")
+	rootCmd.Flags().IntVar(&server.Port, "port", 443, "server port.")
+	rootCmd.Flags().IntVar(&server.MetricsPort, "metricsPort", 9090, "metrics server port.")
+	rootCmd.Flags().StringVar(&server.CertDir, "certDir", "/etc/mutator/certs/", "The directory that contains the server key and certificate")
+	rootCmd.Flags().StringVar(&server.CertName, "certName", "tls.crt", "The server certificate name")
+	rootCmd.Flags().StringVar(&server.KeyName, "keyName", "tls.key", "The server key name")
+	rootCmd.Flags().BoolVar(&server.Local, "local", false, "Local run mode")
+	rootCmd.Flags().StringVar(&(&server.SidecarInjector).InjectPrefix, "injectPrefix", "sidecar-injector.expedia.com", "Injector Prefix")
+	rootCmd.Flags().StringVar(&(&server.SidecarInjector).InjectName, "injectName", "inject", "Injector Name")
+	rootCmd.Flags().StringVar(&(&server.SidecarInjector).SidecarDataKey, "sidecarDataKey", "sidecars.yaml", "ConfigMap Sidecar Data Key")
+	rootCmd.Flags().BoolVar(&(&server.SidecarInjector).AllowAnnotationOverrides, "allowAnnotationOverrides", false, "Allow Annotation Overrides")
+	rootCmd.Flags().BoolVar(&(&server.SidecarInjector).AllowLabelOverrides, "allowLabelOverrides", false, "Allow Label Overrides")
 	rootCmd.Flags().BoolVar(&debug, "debug", false, "enable debug logs")
 }

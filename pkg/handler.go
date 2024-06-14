@@ -30,7 +30,7 @@ type Sidecar struct {
 
 type SidecarInjector struct {
 	decoder                  *admission.Decoder
-	client                   *kubernetes.Clientset
+	client                   kubernetes.Interface
 	InjectPrefix             string
 	InjectName               string
 	SidecarDataKey           string
@@ -61,26 +61,35 @@ func (sidecarInjector *SidecarInjector) InjectClient(c *kubernetes.Clientset) er
 	return nil
 }
 
-func (sidecarInjector *SidecarInjector) sideCarInjectionAnnotation() string {
+func (sidecarInjector *SidecarInjector) sidecarInjectionAnnotation() string {
 	return sidecarInjector.InjectPrefix + "/" + sidecarInjector.InjectName
 }
 
+func getPodName(pod *corev1.Pod) string {
+	if podName := pod.GetName(); podName == "" {
+		return pod.GetGenerateName()
+	} else {
+		return podName
+	}
+}
+
 func (sidecarInjector *SidecarInjector) configmapSidecarNames(pod *corev1.Pod) []string {
+	podName := getPodName(pod)
 	annotations := map[string]string{}
 	if pod.Annotations != nil {
 		annotations = pod.Annotations
 	}
-	if sidecars, ok := annotations[sidecarInjector.sideCarInjectionAnnotation()]; ok {
+	if sidecars, ok := annotations[sidecarInjector.sidecarInjectionAnnotation()]; ok {
 		parts := lo.Map[string, string](strings.Split(sidecars, ","), func(part string, _ int) string {
 			return strings.TrimSpace(part)
 		})
 
 		if len(parts) > 0 {
-			log.Infof("sideCar injection for %v/%v: sidecars: %v", pod.Namespace, pod.Name, sidecars)
+			log.Infof("sideCar injection for %v/%v: sidecars: %v", pod.Namespace, podName, sidecars)
 			return parts
 		}
 	}
-	log.Infof("Skipping mutation for [%v]. No action required", pod.GetName())
+	log.Infof("Skipping mutation for [%v]. No action required", podName)
 	return nil
 }
 
@@ -108,6 +117,9 @@ func (sidecarInjector *SidecarInjector) handleCreate(ctx context.Context, req ad
 						pod.Spec.Containers = append(pod.Spec.Containers, sidecar.Containers...)
 						pod.Spec.Volumes = append(pod.Spec.Volumes, sidecar.Volumes...)
 						pod.Spec.ImagePullSecrets = append(pod.Spec.ImagePullSecrets, sidecar.ImagePullSecrets...)
+						if sidecar.Annotations != nil && pod.Annotations == nil {
+							pod.Annotations = map[string]string{}
+						}
 						for k, v := range sidecar.Annotations {
 							if _, exists := pod.Annotations[k]; exists {
 								if sidecarInjector.AllowAnnotationOverrides {
@@ -116,6 +128,9 @@ func (sidecarInjector *SidecarInjector) handleCreate(ctx context.Context, req ad
 							} else {
 								pod.Annotations[k] = v
 							}
+						}
+						if sidecar.Labels != nil && pod.Labels == nil {
+							pod.Labels = map[string]string{}
 						}
 						for k, v := range sidecar.Labels {
 							if _, exists := pod.Labels[k]; exists {

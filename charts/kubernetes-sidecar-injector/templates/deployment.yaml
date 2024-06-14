@@ -1,0 +1,79 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "common.labels" . | indent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "common.labels" . | indent 6 }}
+  template:
+    metadata:
+      annotations:
+        {{- with .Values.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      labels:
+        {{- include "common.labels" . | indent 8 }}
+        {{- with .Values.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      serviceAccountName: {{ include "serviceaccount.name" . }}
+      containers:
+        - name: kubernetes-sidecar-injector
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          args:
+            - --port={{ .Values.container.port }}
+            - --metricsPort={{ .Values.container.metricsPort }}
+            - --certDir=/opt/kubernetes-sidecar-injector/certs/
+            - --injectPrefix={{ trimSuffix "/" .Values.selectors.injectPrefix }}
+            - --injectName={{ .Values.selectors.injectName }}
+            - --sidecarDataKey={{ .Values.sidecars.dataKey }}
+          volumeMounts:
+            - name: {{ .Release.Name }}-certs
+              mountPath: /opt/kubernetes-sidecar-injector/certs
+              readOnly: true
+          ports:
+            - name: https
+              containerPort: {{ .Values.container.port }}
+              protocol: TCP
+            {{- if ne .Values.container.port .Values.container.metricsPort }}
+            - name: metrics
+              containerPort: {{ .Values.container.metricsPort }}
+              protocol: TCP
+            {{- end }}
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: https
+              scheme: HTTPS
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            successThreshold: 1
+            failureThreshold: 5
+            timeoutSeconds: 4
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: https
+              scheme: HTTPS
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            successThreshold: 1
+            failureThreshold: 5
+            timeoutSeconds: 4
+      {{- with .Values.podSecurityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      imagePullSecrets:
+        {{- toYaml .Values.image.pullSecrets | nindent 8 }}
+      volumes:
+        - name: {{ .Release.Name }}-certs
+          secret:
+            secretName: {{ include "certs.secret.name" . }}

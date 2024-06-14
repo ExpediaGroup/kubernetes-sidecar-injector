@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/stretchr/testify/assert"
+	"gomodules.xyz/jsonpatch/v2"
 	admissionv1 "k8s.io/api/admission/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -12,16 +13,20 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/fake"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
+	"sigs.k8s.io/yaml"
 	"testing"
 )
 
 func TestSidecarInjector_handleCreate(t *testing.T) {
-	pod := &corev1.Pod{}
-	//K8sClient:      fake.NewSimpleClientset(),
+	decoder, err := admission.NewDecoder(scheme)
+	if err != nil {
+		panic(err)
+	}
 
 	ctx := context.Background()
 	type fields struct {
-		K8sClient                kubernetes.Interface
+		decoder                  *admission.Decoder
+		client                   kubernetes.Interface
 		InjectPrefix             string
 		InjectName               string
 		SidecarDataKey           string
@@ -42,160 +47,214 @@ func TestSidecarInjector_handleCreate(t *testing.T) {
 		{
 			name: "pod with no annotations",
 			fields: fields{
+				decoder:        decoder,
+				client:         fake.NewSimpleClientset(),
 				InjectPrefix:   "sidecar-injector.expedia.com",
 				InjectName:     "inject",
 				SidecarDataKey: "sidecars.yaml",
 			},
 			args: args{
-				request: mockPodAdmissionsRequest(nil, pod),
+				request: mockPodAdmissionsRequest(&corev1.Pod{}, nil),
 			},
-			want:    admission.Allowed("delete handled"),
+			configmap: &corev1.ConfigMap{},
+			want: admission.Response{
+				Patches: []jsonpatch.Operation{},
+				AdmissionResponse: admissionv1.AdmissionResponse{
+					Allowed:   true,
+					PatchType: nil,
+				},
+			},
 			wantErr: assert.NoError,
 		},
-		//{
-		//	name: "pod with sidecar annotations no sidecar",
-		//	fields: fields{
-		//		K8sClient:      fake.NewSimpleClientset(),
-		//		InjectPrefix:   "sidecar-injector.expedia.com",
-		//		InjectName:     "inject",
-		//		SidecarDataKey: "sidecars.yaml",
-		//	},
-		//	args: args{
-		//		namespace: "test",
-		//		pod: v1.Pod{ObjectMeta: metav1.ObjectMeta{
-		//			Annotations: map[string]string{
-		//				"sidecar-injector.expedia.com/inject": "non-sidecar",
-		//			},
-		//		}},
-		//	},
-		//	configmap: &v1.ConfigMap{},
-		//	want:      nil,
-		//	wantErr:   assert.NoError,
-		//},
-		//{
-		//	name: "pod with sidecar annotations sidecar with no data",
-		//	fields: fields{
-		//		K8sClient:      fake.NewSimpleClientset(),
-		//		InjectPrefix:   "sidecar-injector.expedia.com",
-		//		InjectName:     "inject",
-		//		SidecarDataKey: "sidecars.yaml",
-		//	},
-		//	args: args{
-		//		namespace: "test",
-		//		pod: v1.Pod{ObjectMeta: metav1.ObjectMeta{
-		//			Annotations: map[string]string{
-		//				"sidecar-injector.expedia.com/inject": "my-sidecar",
-		//			},
-		//		}},
-		//	},
-		//	configmap: &v1.ConfigMap{ObjectMeta: metav1.ObjectMeta{
-		//		Name: "my-sidecar",
-		//	}},
-		//	want:    nil,
-		//	wantErr: assert.NoError,
-		//},
-		//{
-		//	name: "pod with sidecar annotations sidecar with missing sidecar data key",
-		//	fields: fields{
-		//		K8sClient:      fake.NewSimpleClientset(),
-		//		InjectPrefix:   "sidecar-injector.expedia.com",
-		//		InjectName:     "inject",
-		//		SidecarDataKey: "sidecars.yaml",
-		//	},
-		//	args: args{
-		//		namespace: "test",
-		//		pod: v1.Pod{ObjectMeta: metav1.ObjectMeta{
-		//			Annotations: map[string]string{
-		//				"sidecar-injector.expedia.com/inject": "my-sidecar",
-		//			},
-		//		}},
-		//	},
-		//	configmap: &v1.ConfigMap{
-		//		ObjectMeta: metav1.ObjectMeta{
-		//			Name: "my-sidecar",
-		//		},
-		//		Data: map[string]string{"wrongKey.yaml": ""},
-		//	},
-		//	want:    nil,
-		//	wantErr: assert.NoError,
-		//},
-		//{
-		//	name: "pod with sidecar annotations sidecar with sidecar data key but data empty",
-		//	fields: fields{
-		//		K8sClient:      fake.NewSimpleClientset(),
-		//		InjectPrefix:   "sidecar-injector.expedia.com",
-		//		InjectName:     "inject",
-		//		SidecarDataKey: "sidecars.yaml",
-		//	},
-		//	args: args{
-		//		namespace: "test",
-		//		pod: v1.Pod{ObjectMeta: metav1.ObjectMeta{
-		//			Annotations: map[string]string{
-		//				"sidecar-injector.expedia.com/inject": "my-sidecar",
-		//			},
-		//		}},
-		//	},
-		//	configmap: &v1.ConfigMap{
-		//		ObjectMeta: metav1.ObjectMeta{
-		//			Name: "my-sidecar",
-		//		},
-		//		Data: map[string]string{"sidecars.yaml": ""},
-		//	},
-		//	want:    nil,
-		//	wantErr: assert.NoError,
-		//},
-		//{
-		//	name: "pod with sidecar annotations sidecar with sidecar data key but data empty",
-		//	fields: fields{
-		//		K8sClient:      fake.NewSimpleClientset(),
-		//		InjectPrefix:   "sidecar-injector.expedia.com",
-		//		InjectName:     "inject",
-		//		SidecarDataKey: "sidecars.yaml",
-		//	},
-		//	args: args{
-		//		namespace: "test",
-		//		pod: v1.Pod{ObjectMeta: metav1.ObjectMeta{
-		//			Annotations: map[string]string{
-		//				"sidecar-injector.expedia.com/inject": "my-sidecar",
-		//			},
-		//		}},
-		//	},
-		//	configmap: &v1.ConfigMap{
-		//		ObjectMeta: metav1.ObjectMeta{
-		//			Name: "my-sidecar",
-		//		},
-		//		Data: map[string]string{"sidecars.yaml": `
-		//                - annotations:
-		//                    my: annotation
-		//                  labels:
-		//                    my: label`,
-		//		},
-		//	},
-		//	want: []admission.PatchOperation{
-		//		{Op: "add", Path: "/metadata/annotations/my", Value: "annotation"},
-		//		{Op: "add", Path: "/metadata/labels", Value: map[string]string{"my": "label"}}},
-		//	wantErr: assert.NoError,
-		//},
+		{
+			name: "pod with sidecar annotations no sidecar",
+			fields: fields{
+				decoder:        decoder,
+				client:         fake.NewSimpleClientset(),
+				InjectPrefix:   "sidecar-injector.expedia.com",
+				InjectName:     "inject",
+				SidecarDataKey: "sidecars.yaml",
+			},
+			args: args{
+				request: mockPodAdmissionsRequest(&corev1.Pod{
+					ObjectMeta: metav1.ObjectMeta{
+						Annotations: map[string]string{
+							"sidecar-injector.expedia.com/inject": "non-sidecar",
+						}}}, nil),
+			},
+			configmap: &corev1.ConfigMap{},
+			want: admission.Response{
+				Patches: []jsonpatch.Operation{},
+				AdmissionResponse: admissionv1.AdmissionResponse{
+					Allowed:   true,
+					PatchType: nil,
+				},
+			},
+			wantErr: assert.NoError,
+		},
+		{
+			name: "pod with sidecar annotations sidecar with no data",
+			fields: fields{
+				decoder:        decoder,
+				client:         fake.NewSimpleClientset(),
+				InjectPrefix:   "sidecar-injector.expedia.com",
+				InjectName:     "inject",
+				SidecarDataKey: "sidecars.yaml",
+			},
+			args: args{
+				request: mockPodAdmissionsRequest(&corev1.Pod{ObjectMeta: metav1.ObjectMeta{
+					Annotations: map[string]string{
+						"sidecar-injector.expedia.com/inject": "my-sidecar",
+					},
+				}}, nil),
+			},
+			configmap: &corev1.ConfigMap{ObjectMeta: metav1.ObjectMeta{
+				Name: "my-sidecar",
+			}},
+			want: admission.Response{
+				Patches: []jsonpatch.Operation{},
+				AdmissionResponse: admissionv1.AdmissionResponse{
+					Allowed:   true,
+					PatchType: nil,
+				},
+			},
+			wantErr: assert.NoError,
+		},
+		{
+			name: "pod with sidecar annotations sidecar with missing sidecar data key",
+			fields: fields{
+				decoder:        decoder,
+				client:         fake.NewSimpleClientset(),
+				InjectPrefix:   "sidecar-injector.expedia.com",
+				InjectName:     "inject",
+				SidecarDataKey: "sidecars.yaml",
+			},
+			args: args{
+				request: mockPodAdmissionsRequest(&corev1.Pod{
+					ObjectMeta: metav1.ObjectMeta{
+						Annotations: map[string]string{
+							"sidecar-injector.expedia.com/inject": "my-sidecar",
+						}}}, nil),
+			},
+			configmap: &corev1.ConfigMap{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "my-sidecar",
+				},
+				Data: map[string]string{"wrongKey.yaml": ""},
+			},
+			want: admission.Response{
+				Patches: []jsonpatch.Operation{},
+				AdmissionResponse: admissionv1.AdmissionResponse{
+					Allowed:   true,
+					PatchType: nil,
+				},
+			},
+			wantErr: assert.NoError,
+		},
+		{
+			name: "pod with sidecar annotations sidecar with sidecar data key but data empty",
+			fields: fields{
+				decoder:        decoder,
+				client:         fake.NewSimpleClientset(),
+				InjectPrefix:   "sidecar-injector.expedia.com",
+				InjectName:     "inject",
+				SidecarDataKey: "sidecars.yaml",
+			},
+			args: args{
+				request: mockPodAdmissionsRequest(&corev1.Pod{
+					ObjectMeta: metav1.ObjectMeta{
+						Annotations: map[string]string{
+							"sidecar-injector.expedia.com/inject": "my-sidecar",
+						}}}, nil),
+			},
+			configmap: &corev1.ConfigMap{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "my-sidecar",
+				},
+				Data: map[string]string{"sidecars.yaml": ""},
+			},
+			want: admission.Response{
+				Patches: []jsonpatch.Operation{},
+				AdmissionResponse: admissionv1.AdmissionResponse{
+					Allowed:   true,
+					PatchType: nil,
+				},
+			},
+			wantErr: assert.NoError,
+		},
+		{
+			name: "pod with sidecar annotations sidecar with sidecar data key but data empty",
+			fields: fields{
+				decoder:        decoder,
+				client:         fake.NewSimpleClientset(),
+				InjectPrefix:   "sidecar-injector.expedia.com",
+				InjectName:     "inject",
+				SidecarDataKey: "sidecars.yaml",
+			},
+			args: args{
+				request: mockPodAdmissionsRequest(&corev1.Pod{
+					ObjectMeta: metav1.ObjectMeta{
+						Annotations: map[string]string{
+							"sidecar-injector.expedia.com/inject": "my-sidecar",
+						}}}, nil),
+			},
+			configmap: &corev1.ConfigMap{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "my-sidecar",
+				},
+				Data: map[string]string{"sidecars.yaml": func() string {
+					sidecars := []Sidecar{{
+						Annotations: map[string]string{
+							"my": "annotation",
+						},
+						Labels: map[string]string{
+							"my": "label",
+						},
+					}}
+
+					if sidecarsStr, err := yaml.Marshal(&sidecars); err != nil {
+						panic(err)
+					} else {
+						return string(sidecarsStr)
+					}
+				}()},
+			},
+			want: admission.Response{
+				Patches: []jsonpatch.Operation{
+					{Operation: "add", Path: "/metadata/labels", Value: map[string]interface{}{"my": "label"}},
+					{Operation: "add", Path: "/metadata/annotations/my", Value: "annotation"},
+				},
+				AdmissionResponse: admissionv1.AdmissionResponse{
+					Allowed: true,
+					PatchType: func() *admissionv1.PatchType {
+						pt := admissionv1.PatchTypeJSONPatch
+						return &pt
+					}(),
+				},
+			},
+			wantErr: assert.NoError,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			patcher := &SidecarInjector{
-				client:                   fake.NewSimpleClientset(),
+			injector := &SidecarInjector{
+				decoder:                  tt.fields.decoder,
+				client:                   tt.fields.client,
 				InjectPrefix:             tt.fields.InjectPrefix,
 				InjectName:               tt.fields.InjectName,
 				SidecarDataKey:           tt.fields.SidecarDataKey,
 				AllowAnnotationOverrides: tt.fields.AllowAnnotationOverrides,
 				AllowLabelOverrides:      tt.fields.AllowLabelOverrides,
 			}
-			_, err := patcher.K8sClient.CoreV1().ConfigMaps(tt.args.namespace).Create(ctx, tt.configmap, metav1.CreateOptions{})
+			_, err := injector.client.CoreV1().ConfigMaps(tt.args.request.Namespace).Create(ctx, tt.configmap, metav1.CreateOptions{})
 			if err != nil {
 				return
 			}
-			got, err := patcher.handleCreate(ctx, tt.args.namespace, tt.args.pod)
-			if !tt.wantErr(t, err, fmt.Sprintf("handleCreate(%v, %v)", tt.args.namespace, tt.args.pod)) {
+			got := injector.handleCreate(ctx, tt.args.request)
+			if !tt.wantErr(t, err, fmt.Sprintf("handleCreate(%v)", tt.args.request)) {
 				return
 			}
-			assert.Equalf(t, tt.want, got, "handleCreate(%v, %v)", tt.args.namespace, tt.args.pod)
+			assert.Equalf(t, tt.want, got, "handleCreate(%v)", tt.args.request)
 		})
 	}
 }
@@ -416,7 +475,7 @@ func TestSidecarInjector_sideCarInjectionAnnotation(t *testing.T) {
 				InjectPrefix: tt.fields.InjectPrefix,
 				InjectName:   tt.fields.InjectName,
 			}
-			assert.Equalf(t, tt.want, patcher.sideCarInjectionAnnotation(), "sideCarInjectionAnnotation()")
+			assert.Equalf(t, tt.want, patcher.sidecarInjectionAnnotation(), "sidecarInjectionAnnotation()")
 		})
 	}
 }
@@ -441,12 +500,14 @@ func mockPodAdmissionsRequest(pod *corev1.Pod, oldPod *corev1.Pod) admission.Req
 			Raw: podRaw,
 		}
 		admissionRequest.Operation = "CREATE"
+		admissionRequest.Namespace = pod.Namespace
 	}
 	if oldPod != nil {
 		admissionRequest.OldObject = runtime.RawExtension{
 			Raw: oldPodRaw,
 		}
 		admissionRequest.Operation = "DELETE"
+		admissionRequest.Namespace = oldPod.Namespace
 	}
 	if pod != nil && oldPod != nil {
 		admissionRequest.Operation = "UPDATE"

@@ -2,7 +2,7 @@ SHELL := /bin/bash
 CONTAINER_NAME=expediagroup/kubernetes-sidecar-injector
 IMAGE_TAG?=$(shell git rev-parse HEAD)
 KIND_REPO?="kindest/node"
-KUBE_VERSION = v1.21.12
+KUBE_VERSION = v1.25.16
 KIND_CLUSTER?=cluster1
 
 SRC=$(shell find . -type f -name '*.go' -not -path "./vendor/*")
