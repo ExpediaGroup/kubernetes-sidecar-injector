@@ -152,3 +152,19 @@ spec:
         - name: {{ .Release.Name }}-certs
           secret:
             secretName: {{ include "certs.secret.name" . }}
+---
+{{- if .Values.pdb.enabled }}
+apiVersion: policy/v1beta1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ .Release.Name }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "common.labels" . | indent 4 }}
+spec:
+  minAvailable: {{ .Values.pdb.minAvailable }}
+  maxUnavailable: {{ .Values.pdb.maxUnavailable }}
+  selector:
+    matchLabels:
+      {{- include "common.labels" . | indent 6 }}
+{{- end }}
