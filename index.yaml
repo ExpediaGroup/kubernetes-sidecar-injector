@@ -2,6 +2,20 @@ apiVersion: v1
 entries:
   kubernetes-sidecar-injector:
   - apiVersion: v2
+    appVersion: 1.5.0
+    created: "2024-06-21T15:56:47.28854408Z"
+    digest: e2ad37a7d828be2a8eeb12c387713c86c30f642a28c36575a7dd820869545ab1
+    home: https://github.com/ExpediaGroup/kubernetes-sidecar-injector
+    keywords:
+    - kubernetes
+    - sidecar-injection
+    name: kubernetes-sidecar-injector
+    sources:
+    - https://github.com/ExpediaGroup/kubernetes-sidecar-injector
+    urls:
+    - https://github.com/ExpediaGroup/kubernetes-sidecar-injector/releases/download/kubernetes-sidecar-injector-1.3.0/kubernetes-sidecar-injector-1.3.0.tgz
+    version: 1.3.0
+  - apiVersion: v2
     appVersion: 1.4.0
     created: "2024-06-13T19:53:53.186767053Z"
     digest: 9ac8c86920ff3ad8a29a9e12c294e93a370897e0d808ff1acdc82597f6d7f02b
@@ -99,4 +113,4 @@ entries:
     urls:
     - https://github.com/ExpediaGroup/kubernetes-sidecar-injector/releases/download/kubernetes-sidecar-injector-1.0.0/kubernetes-sidecar-injector-1.0.0.tgz
     version: 1.0.0
-generated: "2024-06-13T19:53:53.186793712Z"
+generated: "2024-06-21T15:56:47.288586369Z"
