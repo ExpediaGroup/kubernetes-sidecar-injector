@@ -18,6 +18,11 @@ podAnnotations: {}
 podLabels: {}
 podSecurityContext: {}
 
+pdb:
+  create: false
+  minAvailable: 1
+  maxUnavailable: 1
+
 sidecars:
   dataKey: sidecars.yaml
 
