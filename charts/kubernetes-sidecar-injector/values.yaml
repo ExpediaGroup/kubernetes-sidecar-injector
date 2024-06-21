@@ -19,7 +19,7 @@ podLabels: {}
 podSecurityContext: {}
 
 pdb:
-  enabled: false
+  create: false
   minAvailable: 1
   maxUnavailable: 1
 
