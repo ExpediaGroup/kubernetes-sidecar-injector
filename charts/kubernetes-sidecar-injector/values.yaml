@@ -18,10 +18,34 @@ podAnnotations: {}
 podLabels: {}
 podSecurityContext: {}
 
+# Container-level securityContext for the webhook container. The binary only
+# reads its TLS cert/key from a read-only Secret mount and talks to the API
+# server, so it runs fine as an unprivileged user with a read-only root
+# filesystem. Set to null (not {}, which Helm merges with these defaults) to
+# restore the previous unset behaviour, e.g. if container.port is below 1024.
+securityContext:
+  runAsNonRoot: true
+  runAsUser: 65532
+  runAsGroup: 65532
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  capabilities:
+    drop:
+      - ALL
+  seccompProfile:
+    type: RuntimeDefault
+
+# PodDisruptionBudget (policy/v1). The API accepts only one of minAvailable and
+# maxUnavailable, so only one is rendered: maxUnavailable takes precedence when
+# it is set (non-null), otherwise minAvailable is used. Integers or percentages.
+# Note: with replicaCount 1 and minAvailable 1, voluntary evictions (node
+# drains) are blocked; run 2+ replicas or use maxUnavailable instead.
 pdb:
   create: false
   minAvailable: 1
-  maxUnavailable: 1
+  maxUnavailable: null
+  # Optional: IfHealthyBudget or AlwaysAllow (GA since Kubernetes 1.31).
+  unhealthyPodEvictionPolicy: ""
 
 sidecars:
   dataKey: sidecars.yaml

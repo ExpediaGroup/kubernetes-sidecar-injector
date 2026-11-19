@@ -1,5 +1,10 @@
 {{- if .Values.pdb.create }}
-apiVersion: policy/v1beta1
+{{- $minAvailable := .Values.pdb.minAvailable }}
+{{- $maxUnavailable := .Values.pdb.maxUnavailable }}
+{{- $hasMin := and (not (kindIs "invalid" $minAvailable)) (ne (toString $minAvailable) "") }}
+{{- $hasMax := and (not (kindIs "invalid" $maxUnavailable)) (ne (toString $maxUnavailable) "") }}
+{{- /* The API rejects a PDB with both fields set: maxUnavailable wins when set. */}}
+apiVersion: policy/v1
 kind: PodDisruptionBudget
 metadata:
   name: {{ .Release.Name }}
@@ -7,8 +12,14 @@ metadata:
   labels:
     {{- include "common.labels" . | indent 4 }}
 spec:
-  minAvailable: {{ .Values.pdb.minAvailable }}
-  maxUnavailable: {{ .Values.pdb.maxUnavailable }}
+  {{- if $hasMax }}
+  maxUnavailable: {{ $maxUnavailable }}
+  {{- else if $hasMin }}
+  minAvailable: {{ $minAvailable }}
+  {{- end }}
+  {{- with .Values.pdb.unhealthyPodEvictionPolicy }}
+  unhealthyPodEvictionPolicy: {{ . }}
+  {{- end }}
   selector:
     matchLabels:
       {{- include "common.labels" . | indent 6 }}

@@ -53,9 +53,11 @@ data:
     make helm-install
     ```
 
-2. By default, all namespaces are watched except `kube-system` and `kube-public`. This can be configured in your [helm values](charts/kubernetes-sidecar-injector/values.yaml#L13-L19).
+2. By default, all namespaces are watched except `kube-system` and `kube-public`. This can be configured in your [helm values](charts/kubernetes-sidecar-injector/values.yaml#L58-L64).
 
-3. Add the annotation ([`sidecar-injector.expedia.com/inject`](charts/kubernetes-sidecar-injector/values.yaml#L9-L10) by default) with ConfigMap sidecar name to inject in pod spec where sidecar needs to be injected. [This sample spec](sample/chart/echo-server/templates/deployment.yaml#L16) shows such an annotation added to a pod spec to inject `haystack-agent`.
+   The chart runs the webhook container as a non-root user (UID 65532) with a read-only root filesystem, no privilege escalation, all capabilities dropped and the `RuntimeDefault` seccomp profile (see `securityContext` in the [helm values](charts/kubernetes-sidecar-injector/values.yaml)). Set `securityContext: null` to opt out (an empty map would be merged with the defaults). An optional `policy/v1` PodDisruptionBudget is available with `pdb.create=true`; only one of `pdb.minAvailable` / `pdb.maxUnavailable` is rendered (`maxUnavailable` wins when set).
+
+3. Add the annotation ([`sidecar-injector.expedia.com/inject`](charts/kubernetes-sidecar-injector/values.yaml#L54-L55) by default) with ConfigMap sidecar name to inject in pod spec where sidecar needs to be injected. [This sample spec](sample/chart/echo-server/templates/deployment.yaml#L16) shows such an annotation added to a pod spec to inject `haystack-agent`.
 
 4. Create your ConfigMap sidecar configuration
 
