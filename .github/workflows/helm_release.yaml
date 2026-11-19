@@ -113,6 +113,7 @@ jobs:
           version: ${{ steps.helm-version-bump.outputs.newTag }}
           apiVersion: v2
           appVersion: "${{ steps.version.outputs.value }}"
+          kubeVersion: ">=1.25.0-0"
           keywords:
             - kubernetes
             - sidecar-injection
