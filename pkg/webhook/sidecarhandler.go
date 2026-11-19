@@ -5,13 +5,13 @@ import (
 	"strings"
 
 	"github.com/expediagroup/kubernetes-sidecar-injector/pkg/admission"
-	"github.com/ghodss/yaml"
 	"github.com/samber/lo"
 	log "github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
+	"sigs.k8s.io/yaml"
 )
 
 // Sidecar Kubernetes Sidecar Injector schema
